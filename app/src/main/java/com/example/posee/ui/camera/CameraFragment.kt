@@ -1,7 +1,6 @@
 package com.example.posee.ui.camera
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,17 +8,17 @@ import android.graphics.Bitmap
 import android.media.ThumbnailUtils
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.posee.R
 import com.example.posee.databinding.FragmentCameraBinding
 import com.example.posee.ml.Model
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -35,22 +34,20 @@ class CameraFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val imageSize = 224
+    private var shouldLaunchCamera = true
 
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultData ->
-            if (resultData.resultCode == Activity.RESULT_OK) {
+            if (resultData.resultCode == android.app.Activity.RESULT_OK) {
                 val image = resultData.data?.extras?.get("data") as? Bitmap
-                if (image == null) {
-                    Toast.makeText(requireContext(), "사진을 불러올 수 없습니다.", Toast.LENGTH_SHORT).show()
-                    return@registerForActivityResult
+                image?.let {
+                    val dimension = minOf(it.width, it.height)
+                    val thumbnail = ThumbnailUtils.extractThumbnail(it, dimension, dimension)
+                    binding.imageView.setImageBitmap(thumbnail)
+
+                    val scaledImage = Bitmap.createScaledBitmap(thumbnail, imageSize, imageSize, false)
+                    classifyImage(scaledImage)
                 }
-
-                val dimension = minOf(image.width, image.height)
-                val thumbnail = ThumbnailUtils.extractThumbnail(image, dimension, dimension)
-                binding.imageView.setImageBitmap(thumbnail)
-
-                val scaledImage = Bitmap.createScaledBitmap(thumbnail, imageSize, imageSize, false)
-                classifyImage(scaledImage)
             } else {
                 Toast.makeText(requireContext(), "사진 촬영이 취소되었습니다.", Toast.LENGTH_SHORT).show()
             }
@@ -62,35 +59,39 @@ class CameraFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
-
-        // 뒤로가기 처리
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    parentFragmentManager.popBackStack()
-                }
-            })
-
         return binding.root
     }
 
     override fun onResume() {
         super.onResume()
-        launchCameraIfPermitted()
-    }
-
-    private fun launchCameraIfPermitted() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(intent)
-        } else {
-            showPermissionDialog()
+        if (shouldLaunchCamera) {
+            launchCamera()
+            shouldLaunchCamera = false
         }
     }
 
-    private fun showPermissionDialog() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.imageView.setOnClickListener {
+            shouldLaunchCamera = true
+            launchCamera()
+        }
+    }
+
+
+    private fun launchCamera() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            cameraLauncher.launch(cameraIntent)
+        } else {
+            requestCameraPermission()
+        }
+    }
+
+    private fun requestCameraPermission() {
         AlertDialog.Builder(requireContext())
             .setTitle("카메라 권한 필요")
             .setMessage("사진을 찍으려면 카메라 권한이 필요합니다.\n설정 > 앱 권한에서 허용해주세요.")
@@ -109,8 +110,7 @@ class CameraFragment : Fragment() {
         try {
             val model = Model.newInstance(requireContext())
 
-            val inputFeature0 =
-                TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
             val byteBuffer = ByteBuffer.allocateDirect(4 * imageSize * imageSize * 3)
             byteBuffer.order(ByteOrder.nativeOrder())
 
@@ -128,16 +128,12 @@ class CameraFragment : Fragment() {
             }
 
             inputFeature0.loadBuffer(byteBuffer)
-
             val outputs = model.process(inputFeature0)
-            val outputFeature0 = outputs.outputFeature0AsTensorBuffer
-
-            val confidences = outputFeature0.floatArray
+            val confidences = outputs.outputFeature0AsTensorBuffer.floatArray
             val classes = arrayOf("proper posture", "wrong posture")
 
             val maxIndex = confidences.indices.maxByOrNull { confidences[it] } ?: -1
             val resultText = classes.getOrNull(maxIndex) ?: "Unknown"
-            Log.d("PostureResult", "예측 결과: $resultText")
 
             binding.result.text = resultText
 
@@ -149,7 +145,7 @@ class CameraFragment : Fragment() {
 
             model.close()
 
-            showResultBottomSheet(resultText)
+            showResultBubble(resultText)
 
         } catch (e: IOException) {
             e.printStackTrace()
@@ -157,26 +153,40 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun showResultBottomSheet(result: String) {
+    private fun showResultBubble(result: String) {
         val message = when (result) {
-            "proper posture" -> "✅ 바른 자세예요! 😊"
-            "wrong posture" -> "❗ 자세를 고쳐 앉으세요! 🪑"
-            else -> "❓ 결과를 알 수 없습니다. 다시 시도해주세요."
+            "proper posture" -> "바른 자세예요!"
+            "wrong posture" -> "화면과 너무 가까워요!"
+            else -> "결과를 알 수 없습니다."
         }
 
-        val bottomSheet = BottomSheetDialog(requireContext())
-        val view = layoutInflater.inflate(android.R.layout.simple_list_item_1, null)
-        val text = view.findViewById<TextView>(android.R.id.text1)
-        text.text = message
-        text.textSize = 18f
-        text.setPadding(40, 60, 40, 60)
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.dialog_result_bubble, null)
 
-        bottomSheet.setContentView(view)
-        bottomSheet.show()
+        val messageText = view.findViewById<TextView>(R.id.messageText)
+        val appNameText = view.findViewById<TextView>(R.id.appName)
+        val closeBtn = view.findViewById<TextView>(R.id.closeBtn)
+
+        messageText.text = message
+        appNameText.text = "Posee"
+        closeBtn.setOnClickListener { dialog.dismiss() }
+
+        dialog.setContentView(view)
+
+        // 다이얼로그를 상단에 표시
+        dialog.window?.apply {
+            setGravity(Gravity.TOP)
+            attributes = attributes.apply {
+                y = 150
+            }
+        }
+
+        dialog.show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
 }

@@ -1,0 +1,12 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#6366F1"/> <!-- 보라색 원 -->
+        </shape>
+    </item>
+    <item android:width="4dp" android:height="4dp" android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF"/> <!-- 흰 점 -->
+        </shape>
+    </item>
+</layer-list>

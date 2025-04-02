@@ -2,26 +2,24 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cameraFragmentRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
-
-    <!-- 상단 중앙 텍스트 -->
+    tools:context=".ui.camera.CameraFragment">
 
     <!-- 이미지 뷰 -->
-
-    <!-- 분류된 텍스트 -->
-
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="82dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="82dp"
+        tools:src="@tools:sample/avatars" />
 
+    <!-- 분류 라벨 -->
     <TextView
         android:id="@+id/classified"
         android:layout_width="wrap_content"
@@ -30,9 +28,9 @@
         android:text="Classified as:"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/imageView" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- 결과 텍스트 -->
     <TextView
@@ -43,9 +41,9 @@
         android:textColor="#C30000"
         android:textSize="27sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/classified"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/classified" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- 신뢰도 라벨 -->
     <TextView
@@ -56,9 +54,9 @@
         android:text="Confidences:"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/result"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/result" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- 신뢰도 값 -->
     <TextView
@@ -68,11 +66,8 @@
         android:text=""
         android:textColor="#000"
         android:textSize="22sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confidencesText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/confidencesText" />
-
-    <!-- 하단 버튼 -->
-
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

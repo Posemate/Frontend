@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- 배경색: 흰색 -->
+    <solid android:color="@android:color/white" />
+
+    <!-- 둥근 말풍선 스타일 -->
+    <corners android:radius="24dp" />
+
+</shape>
