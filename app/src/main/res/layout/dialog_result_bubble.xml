@@ -27,11 +27,11 @@
             android:layout_height="wrap_content"
             android:text="Posee"
             android:textColor="#6366F1"
-            android:textStyle="bold"
             android:textSize="14sp"
             android:layout_marginEnd="6dp" />
 
         <TextView
+            android:id="@+id/timeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="now"
@@ -47,7 +47,7 @@
         android:text="화면과 너무 가까워요!"
         android:textColor="#222222"
         android:textSize="18sp"
-        android:textStyle="bold"
+        android:textStyle=""
         android:layout_marginTop="10dp"
         android:layout_marginBottom="4dp" />
 

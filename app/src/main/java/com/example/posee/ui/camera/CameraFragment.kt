@@ -1,5 +1,5 @@
 package com.example.posee.ui.camera
-
+import android.app.Dialog
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
@@ -21,12 +21,13 @@ import androidx.fragment.app.Fragment
 import com.example.posee.R
 import com.example.posee.databinding.FragmentCameraBinding
 import com.example.posee.ml.Model
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.text.SimpleDateFormat
+import java.util.*
 
 class CameraFragment : Fragment() {
 
@@ -160,29 +161,39 @@ class CameraFragment : Fragment() {
             else -> "결과를 알 수 없습니다."
         }
 
-        val dialog = BottomSheetDialog(requireContext())
+        val dialog = Dialog(requireContext())
         val view = layoutInflater.inflate(R.layout.dialog_result_bubble, null)
 
         val messageText = view.findViewById<TextView>(R.id.messageText)
         val appNameText = view.findViewById<TextView>(R.id.appName)
+        val timeText = view.findViewById<TextView>(R.id.timeText)
         val closeBtn = view.findViewById<TextView>(R.id.closeBtn)
 
         messageText.text = message
         appNameText.text = "Posee"
+
+        // 현재 시간 설정
+        val currentTime = Calendar.getInstance().time
+        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        timeText.text = formatter.format(currentTime)
+
         closeBtn.setOnClickListener { dialog.dismiss() }
 
         dialog.setContentView(view)
 
-        // 다이얼로그를 상단에 표시
-        dialog.window?.apply {
-            setGravity(Gravity.TOP)
-            attributes = attributes.apply {
-                y = 150
-            }
+        // 다이얼로그 위치 설정 (상단 알림처럼)
+        dialog.window?.let { window ->
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            val params = window.attributes
+            params.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            params.y = 150
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT
+            window.attributes = params
         }
 
         dialog.show()
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
