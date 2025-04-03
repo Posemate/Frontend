@@ -58,4 +58,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // mp android chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    // 리사이클러뷰
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    // bottom sheet
+    implementation("com.google.android.material:material:1.6.0")
 }
