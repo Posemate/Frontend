@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "417188890081",
+    "firebase_url": "https://posee-7679d-default-rtdb.firebaseio.com",
+    "project_id": "posee-7679d",
+    "storage_bucket": "posee-7679d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417188890081:android:3030eeb935af5d37c37ea0",
+        "android_client_info": {
+          "package_name": "com.cookandroid.posee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZTZjkC_XAtEK85HVmPkcjoqGvHl3Ecwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417188890081:android:89805cd7ebec89f3c37ea0",
+        "android_client_info": {
+          "package_name": "com.example.posee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZTZjkC_XAtEK85HVmPkcjoqGvHl3Ecwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
