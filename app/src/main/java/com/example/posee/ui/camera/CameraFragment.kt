@@ -41,18 +41,36 @@ class CameraFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultData ->
             if (resultData.resultCode == android.app.Activity.RESULT_OK) {
                 val image = resultData.data?.extras?.get("data") as? Bitmap
-                image?.let {
-                    val dimension = minOf(it.width, it.height)
-                    val thumbnail = ThumbnailUtils.extractThumbnail(it, dimension, dimension)
-                    binding.imageView.setImageBitmap(thumbnail)
-
-                    val scaledImage = Bitmap.createScaledBitmap(thumbnail, imageSize, imageSize, false)
-                    classifyImage(scaledImage)
+                if (image == null) {
+                    Toast.makeText(requireContext(), "이미지를 불러오지 못했습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    shouldLaunchCamera = true
+                    return@registerForActivityResult
                 }
+
+                val dimension = minOf(image.width, image.height)
+                val thumbnail = ThumbnailUtils.extractThumbnail(image, dimension, dimension)
+                binding.imageView.setImageBitmap(thumbnail)
+
+                val scaledImage = Bitmap.createScaledBitmap(thumbnail, imageSize, imageSize, false)
+                classifyImage(scaledImage)
+
+                // 여기서 false 처리
+                shouldLaunchCamera = false
             } else {
                 Toast.makeText(requireContext(), "사진 촬영이 취소되었습니다.", Toast.LENGTH_SHORT).show()
+                shouldLaunchCamera = true
             }
         }
+
+    override fun onResume() {
+        super.onResume()
+        if (shouldLaunchCamera) {
+            launchCamera()
+            // 여기서 false 설정하면 안됨 (찍지도 않았는데 막히게 됨)
+            // shouldLaunchCamera = false (삭제)
+        }
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,22 +81,17 @@ class CameraFragment : Fragment() {
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (shouldLaunchCamera) {
-            launchCamera()
-            shouldLaunchCamera = false
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 📷 이미지뷰 클릭 시 카메라 재실행
         binding.imageView.setOnClickListener {
             shouldLaunchCamera = true
             launchCamera()
         }
     }
+
 
 
     private fun launchCamera() {
