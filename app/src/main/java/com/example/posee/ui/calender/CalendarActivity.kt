@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +14,7 @@ import com.example.poseeui.BottomItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
-class CalenderFragment : Fragment() {
+class CalendarActivity : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
@@ -28,8 +27,8 @@ class CalenderFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val calenderViewModel =
-            ViewModelProvider(this).get(CalenderViewModel::class.java)
+        val calendarViewModel =
+            ViewModelProvider(this).get(CalendarViewModel::class.java)
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -65,7 +64,7 @@ class CalenderFragment : Fragment() {
         }
 
         //val textView: TextView = binding.textHome
-        calenderViewModel.text.observe(viewLifecycleOwner) {
+        calendarViewModel.text.observe(viewLifecycleOwner) {
             //textView.text = it
         }
         return root

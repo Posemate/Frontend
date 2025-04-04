@@ -8,19 +8,19 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.posee.ui.calender.CalenderFragment"
-        android:label="@string/title_home"
+        android:name="com.example.posee.ui.calender.CalendarActivity"
+        android:label="@string/title_calendar"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.example.posee.ui.camera.CameraFragment"
-        android:label="@string/title_dashboard"
+        android:name="com.example.posee.ui.camera.CameraActivity"
+        android:label="@string/title_camera"
         tools:layout="@layout/fragment_camera" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.example.posee.ui.mypage.MypageFragment"
-        android:label="@string/title_notifications"
+        android:name="com.example.posee.ui.mypage.MypageActivity"
+        android:label="@string/title_mypage"
         tools:layout="@layout/fragment_notifications" />
 </navigation>
