@@ -3,4 +3,10 @@
     <string name="title_home">Calendar</string>
     <string name="title_dashboard">Camera</string>
     <string name="title_notifications">Mypage</string>
+    <string name="logout"><u>로그아웃</u></string>
+    <string-array name="options_array">
+        <item>전체</item>
+        <item>목</item>
+        <item>눈</item>
+    </string-array>
 </resources>
