@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/rounded_item"
+    android:layout_marginBottom="12dp"
+    android:elevation="1dp">
+
+    <TextView
+        android:id="@+id/item_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="목 전체"
+        android:textSize="12sp"
+        android:textColor="@color/white"
+        android:background="@drawable/rounded_blue"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"/>
+
+    <TextView
+        android:id="@+id/item_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="목 전체를 위한 가벼운 스트레칭"
+        android:textSize="18sp"
+        android:textStyle="bold"
+
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@+id/item_category"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="20dp" />
+
+    <TextView
+        android:id="@+id/item_sub"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="목의 긴장을 풀고 유연성을 높이기"
+        android:textSize="14sp"
+        android:textColor="@color/dark_gray"
+        app:layout_constraintTop_toBottomOf="@+id/item_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="보러 가기 >"
+        android:textSize="12sp"
+        android:textColor="@color/dark_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/item_category"
+        app:layout_constraintBottom_toBottomOf="@+id/item_category"
+        android:layout_marginEnd="20dp" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
