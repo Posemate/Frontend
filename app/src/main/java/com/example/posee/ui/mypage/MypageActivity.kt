@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -13,7 +12,7 @@ import com.example.posee.databinding.FragmentNotificationsBinding
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 
-class MypageFragment : Fragment() {
+class MypageActivity : Fragment() {
 
     private var _binding: FragmentNotificationsBinding? = null
 

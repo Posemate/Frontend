@@ -29,7 +29,7 @@ import java.nio.ByteOrder
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CameraFragment : Fragment() {
+class CameraActivity : Fragment() {
 
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
