@@ -1,200 +1,175 @@
 package com.example.posee.ui.camera
-import android.app.Dialog
+
 import android.Manifest
-import android.app.AlertDialog
-import android.content.Intent
+import android.app.Dialog
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.media.ThumbnailUtils
+import android.graphics.*
 import android.os.Bundle
-import android.provider.MediaStore
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Size
+import android.view.*
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.example.posee.R
 import com.example.posee.databinding.FragmentCameraBinding
-import com.example.posee.ml.Model
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.IOException
+import org.tensorflow.lite.Interpreter
+import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executors
 
 class CameraActivity : Fragment() {
 
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
+    private lateinit var interpreter: Interpreter
 
     private val imageSize = 224
-    private var shouldLaunchCamera = true
-
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultData ->
-            if (resultData.resultCode == android.app.Activity.RESULT_OK) {
-                val image = resultData.data?.extras?.get("data") as? Bitmap
-                if (image == null) {
-                    Toast.makeText(requireContext(), "이미지를 불러오지 못했습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                    shouldLaunchCamera = true
-                    return@registerForActivityResult
-                }
-
-                val dimension = minOf(image.width, image.height)
-                val thumbnail = ThumbnailUtils.extractThumbnail(image, dimension, dimension)
-                binding.imageView.setImageBitmap(thumbnail)
-
-                val scaledImage = Bitmap.createScaledBitmap(thumbnail, imageSize, imageSize, false)
-                classifyImage(scaledImage)
-
-                // 여기서 false 처리
-                shouldLaunchCamera = false
-            } else {
-                Toast.makeText(requireContext(), "사진 촬영이 취소되었습니다.", Toast.LENGTH_SHORT).show()
-                shouldLaunchCamera = true
-            }
-        }
-
-    override fun onResume() {
-        super.onResume()
-        if (shouldLaunchCamera) {
-            launchCamera()
-            // 여기서 false 설정하면 안됨 (찍지도 않았는데 막히게 됨)
-            // shouldLaunchCamera = false (삭제)
-        }
-    }
-
+    private val executor = Executors.newSingleThreadExecutor()
+    private var latestImageProxy: ImageProxy? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // 📷 이미지뷰 클릭 시 카메라 재실행
-        binding.imageView.setOnClickListener {
-            shouldLaunchCamera = true
-            launchCamera()
-        }
-    }
-
-
-
-    private fun launchCamera() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(cameraIntent)
+            == PackageManager.PERMISSION_GRANTED) {
+            startCamera()
         } else {
-            requestCameraPermission()
+            ActivityCompat.requestPermissions(requireActivity(),
+                arrayOf(Manifest.permission.CAMERA), 100)
+        }
+
+        interpreter = Interpreter(loadModelFile("model.tflite"))
+
+        binding.btnAnalyze.setOnClickListener {
+            latestImageProxy?.let { imageProxy ->
+                val bitmap = imageProxyToBitmap(imageProxy)
+                val input = preprocess(bitmap)
+                val output = Array(1) { FloatArray(1) }
+                interpreter.run(input, output)
+
+                val confidence = output[0][0]
+                val resultText = if (confidence > 0.5) "wrong posture" else "proper posture"
+                binding.result.text = resultText
+                showResultBubble(resultText)
+
+                imageProxy.close()
+                latestImageProxy = null
+            } ?: run {
+                Toast.makeText(requireContext(), "카메라 프레임을 가져오는 중입니다.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun requestCameraPermission() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("카메라 권한 필요")
-            .setMessage("사진을 찍으려면 카메라 권한이 필요합니다.\n설정 > 앱 권한에서 허용해주세요.")
-            .setPositiveButton("권한 요청") { _, _ ->
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    arrayOf(Manifest.permission.CAMERA),
-                    100
-                )
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             }
-            .setNegativeButton("취소", null)
-            .show()
+
+            val analyzer = ImageAnalysis.Builder()
+                .setTargetResolution(Size(imageSize, imageSize))
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            analyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+                latestImageProxy?.close()
+                latestImageProxy = imageProxy
+            })
+
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            cameraProvider.bindToLifecycle(this, cameraSelector, preview, analyzer)
+
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun classifyImage(image: Bitmap) {
-        try {
-            val model = Model.newInstance(requireContext())
+    private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
+        val yBuffer = imageProxy.planes[0].buffer
+        val uBuffer = imageProxy.planes[1].buffer
+        val vBuffer = imageProxy.planes[2].buffer
 
-            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
-            val byteBuffer = ByteBuffer.allocateDirect(4 * imageSize * imageSize * 3)
-            byteBuffer.order(ByteOrder.nativeOrder())
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
 
-            val intValues = IntArray(imageSize * imageSize)
-            image.getPixels(intValues, 0, image.width, 0, 0, image.width, image.height)
+        val nv21 = ByteArray(ySize + uSize + vSize)
+        yBuffer.get(nv21, 0, ySize)
+        vBuffer.get(nv21, ySize, vSize)
+        uBuffer.get(nv21, ySize + vSize, uSize)
 
-            var pixel = 0
-            for (i in 0 until imageSize) {
-                for (j in 0 until imageSize) {
-                    val value = intValues[pixel++]
-                    byteBuffer.putFloat(((value shr 16) and 0xFF) / 255f)
-                    byteBuffer.putFloat(((value shr 8) and 0xFF) / 255f)
-                    byteBuffer.putFloat((value and 0xFF) / 255f)
-                }
+        val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 90, out)
+        val yuvByteArray = out.toByteArray()
+        return BitmapFactory.decodeByteArray(yuvByteArray, 0, yuvByteArray.size)
+    }
+
+    private fun preprocess(bitmap: Bitmap): ByteBuffer {
+        val scaled = Bitmap.createScaledBitmap(bitmap, imageSize, imageSize, true)
+        val byteBuffer = ByteBuffer.allocateDirect(4 * imageSize * imageSize * 3)
+        byteBuffer.order(ByteOrder.nativeOrder())
+
+        val intValues = IntArray(imageSize * imageSize)
+        scaled.getPixels(intValues, 0, imageSize, 0, 0, imageSize, imageSize)
+        var pixel = 0
+        for (i in 0 until imageSize) {
+            for (j in 0 until imageSize) {
+                val value = intValues[pixel++]
+                byteBuffer.putFloat(((value shr 16) and 0xFF) / 255f)
+                byteBuffer.putFloat(((value shr 8) and 0xFF) / 255f)
+                byteBuffer.putFloat((value and 0xFF) / 255f)
             }
-
-            inputFeature0.loadBuffer(byteBuffer)
-            val outputs = model.process(inputFeature0)
-            val confidences = outputs.outputFeature0AsTensorBuffer.floatArray
-            val classes = arrayOf("proper posture", "wrong posture")
-
-            val maxIndex = confidences.indices.maxByOrNull { confidences[it] } ?: -1
-            val resultText = classes.getOrNull(maxIndex) ?: "Unknown"
-
-            binding.result.text = resultText
-
-            val s = StringBuilder()
-            for (i in classes.indices) {
-                s.append(String.format("%s: %.1f%%\n", classes[i], confidences[i] * 100))
-            }
-            binding.confidence.text = s.toString()
-
-            model.close()
-
-            showResultBubble(resultText)
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(requireContext(), "모델 실행 중 오류 발생", Toast.LENGTH_SHORT).show()
         }
+        return byteBuffer
+    }
+
+    private fun loadModelFile(modelName: String): ByteBuffer {
+        val fileDescriptor = requireContext().assets.openFd(modelName)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
     private fun showResultBubble(result: String) {
         val message = when (result) {
-            "proper posture" -> "바른 자세예요!"
-            "wrong posture" -> "화면과 너무 가까워요!"
+            "proper posture" -> "아주 좋은 자세예요!"
+            "wrong posture" -> "너무 가까워요!"
             else -> "결과를 알 수 없습니다."
         }
 
         val dialog = Dialog(requireContext())
-        val view = layoutInflater.inflate(R.layout.dialog_result_bubble, null)
+        val view = layoutInflater.inflate(com.example.posee.R.layout.dialog_result_bubble, null)
 
-        val messageText = view.findViewById<TextView>(R.id.messageText)
-        val appNameText = view.findViewById<TextView>(R.id.appName)
-        val timeText = view.findViewById<TextView>(R.id.timeText)
-        val closeBtn = view.findViewById<TextView>(R.id.closeBtn)
+        val messageText = view.findViewById<TextView>(com.example.posee.R.id.messageText)
+        val appNameText = view.findViewById<TextView>(com.example.posee.R.id.appName)
+        val timeText = view.findViewById<TextView>(com.example.posee.R.id.timeText)
+        val closeBtn = view.findViewById<TextView>(com.example.posee.R.id.closeBtn)
 
         messageText.text = message
         appNameText.text = "Posee"
-
-        // 현재 시간 설정
-        val currentTime = Calendar.getInstance().time
-        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-        timeText.text = formatter.format(currentTime)
+        timeText.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
 
         closeBtn.setOnClickListener { dialog.dismiss() }
 
         dialog.setContentView(view)
-
-        // 다이얼로그 위치 설정 (상단 알림처럼)
         dialog.window?.let { window ->
             window.setBackgroundDrawableResource(android.R.color.transparent)
             val params = window.attributes
@@ -203,14 +178,12 @@ class CameraActivity : Fragment() {
             params.width = ViewGroup.LayoutParams.MATCH_PARENT
             window.attributes = params
         }
-
         dialog.show()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        interpreter.close()
     }
-
 }

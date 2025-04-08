@@ -8,27 +8,13 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.camera.CameraActivity">
 
-    <!-- 이미지 뷰 -->
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+    <!-- 카메라 프리뷰 영역 -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="82dp"
-        tools:src="@tools:sample/avatars" />
-
-    <!-- 분류 라벨 -->
-    <TextView
-        android:id="@+id/classified"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Classified as:"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/imageView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -37,36 +23,25 @@
         android:id="@+id/result"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="결과 없음"
         android:textColor="#C30000"
-        android:textSize="27sp"
+        android:textSize="26sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/classified"
+        android:background="#AAFFFFFF"
+        android:padding="8dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="20dp" />
 
-    <!-- 신뢰도 라벨 -->
-    <TextView
-        android:id="@+id/confidencesText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Confidences:"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/result"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- 신뢰도 값 -->
-    <TextView
-        android:id="@+id/confidence"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textColor="#000"
-        android:textSize="22sp"
-        app:layout_constraintTop_toBottomOf="@id/confidencesText"
+    <!-- 링 모양의 분석 버튼 -->
+    <ImageButton
+        android:id="@+id/btnAnalyze"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginBottom="36dp"
+        android:background="@drawable/btn_ring"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
