@@ -29,20 +29,75 @@
         android:textStyle="bold"
         android:background="#AAFFFFFF"
         android:padding="8dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="20dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 링 모양의 분석 버튼 -->
-    <ImageButton
-        android:id="@+id/btnAnalyze"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_marginBottom="36dp"
-        android:background="@drawable/btn_ring"
+    <!-- guideOverlay 먼저 배치: 항상 가장 아래 깔려 있어야 함 -->
+    <ImageView
+        android:id="@+id/guideOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="90dp"
+        android:src="@drawable/guide_overlay"
+        android:scaleType="fitXY"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 검정 반투명 터치 배경 -->
+    <View
+        android:id="@+id/guideCover"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#AA000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 안내 텍스트 -->
+    <TextView
+        android:id="@+id/guideText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text=""
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@+id/guideLine"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="버튼을 눌러서\n올바른 자세인지 아닌지를\n확인할 수 있어요" />
+
+
+    <!-- 안내 선 -->
+    <ImageView
+        android:id="@+id/guideLine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/line"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/btnAnalyze"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 링 버튼 -->
+    <ImageButton
+        android:id="@+id/btnAnalyze"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginBottom="70dp"
+        android:background="@drawable/btn_ring"
+        android:contentDescription="분석 시작"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

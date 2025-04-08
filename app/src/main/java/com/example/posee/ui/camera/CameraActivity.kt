@@ -24,6 +24,11 @@ import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import com.example.posee.R
+
 
 class CameraActivity : Fragment() {
 
@@ -42,17 +47,46 @@ class CameraActivity : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(requireActivity(),
-                arrayOf(Manifest.permission.CAMERA), 100)
-        }
+    private fun setGuideTextStyle() {
+        val text = "버튼을 눌러서\n올바른 자세인지 아닌지를\n확인할 수 있어요"
+        val spannable = SpannableString(text)
 
-        interpreter = Interpreter(loadModelFile("model.tflite"))
+        // 보라색 강조할 범위 지정
+        val purple = ContextCompat.getColor(requireContext(), R.color.purple_500)
+        spannable.setSpan(
+            ForegroundColorSpan(purple),
+            0, 2, // "버튼"
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        spannable.setSpan(
+            ForegroundColorSpan(purple),
+            7, 17, // "올바른 자세인지 아닌지"
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        binding.guideText.text = spannable
+    }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            setGuideTextStyle()
+
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            } else {
+                ActivityCompat.requestPermissions(requireActivity(),
+                    arrayOf(Manifest.permission.CAMERA), 100)
+            }
+
+            interpreter = Interpreter(loadModelFile("model.tflite"))
+
+            // 화면 터치 시 안내사항 숨기기
+            binding.guideCover.setOnClickListener {
+                binding.guideCover.visibility = View.GONE
+                binding.guideText.visibility = View.GONE
+                binding.guideLine.visibility = View.GONE
+            }
 
         binding.btnAnalyze.setOnClickListener {
             latestImageProxy?.let { imageProxy ->
