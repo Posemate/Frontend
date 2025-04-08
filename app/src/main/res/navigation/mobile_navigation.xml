@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.posee.ui.calender.CalendarActivity"
+        android:name="com.example.posee.ui.calendar.CalendarActivity"
         android:label="@string/title_calendar"
         tools:layout="@layout/fragment_home" />
 
