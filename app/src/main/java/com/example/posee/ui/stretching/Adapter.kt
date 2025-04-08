@@ -1,5 +1,6 @@
 package com.example.posee.ui.stretching
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
@@ -31,12 +32,19 @@ class Adapter :
         private val category = view.findViewById<TextView>(R.id.item_category)
         private val title = view.findViewById<TextView>(R.id.item_title)
         private val sub = view.findViewById<TextView>(R.id.item_sub)
+        private val go = view.findViewById<TextView>(R.id.item_go)
+
         fun bind(item: Item) {
             category.text = item.category
             title.text = item.title
             sub.text = item.sub
             val drawable = ContextCompat.getDrawable(category.context, item.color)
             category.background = drawable
+
+            go.setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(item.url))
+                it.context.startActivity(intent)
+            }
         }
     }
 }

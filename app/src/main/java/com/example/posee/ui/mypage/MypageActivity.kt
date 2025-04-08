@@ -1,5 +1,6 @@
 package com.example.posee.ui.mypage
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.posee.R
 import com.example.posee.databinding.FragmentNotificationsBinding
+import com.example.posee.ui.stretching.StretchingActivity
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 
@@ -52,6 +54,13 @@ class MypageActivity : Fragment() {
         mypageViewModel.text.observe(viewLifecycleOwner) {
             //textView.text = it
         }
+
+        // 목 스트레칭 버튼 동작
+        binding.stretchLeft.setOnClickListener {
+            val intent = Intent(requireContext(), StretchingActivity::class.java)
+            startActivity(intent)
+        }
+
         return root
     }
 
