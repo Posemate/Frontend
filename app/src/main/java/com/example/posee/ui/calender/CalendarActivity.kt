@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CalendarView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -32,10 +34,37 @@ class CalendarActivity : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-// 👉 여기서 바텀시트 뷰 inflate
+
+
+        //val textView: TextView = binding.textHome
+        calendarViewModel.text.observe(viewLifecycleOwner) {
+            //textView.text = it
+        }
+
+        val calendarView = binding.root.findViewById<CalendarView>(R.id.calendar_view)
+
+        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            // month는 0부터 시작하므로 +1 해줘야 합니다!
+            val formattedDate = "${year}년 ${month + 1}월 ${dayOfMonth}일"
+            showBottomSheet(formattedDate)
+        }
+
+        return root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun showBottomSheet(dateString: String) {
         val bottomSheetView = layoutInflater.inflate(R.layout.activity_bottom_sheet, null)
 
-        // RecyclerView & Adapter 연결
+        // 날짜 텍스트 설정
+        val dateTextView = bottomSheetView.findViewById<TextView>(R.id.calendar_date)
+        dateTextView.text = dateString
+
+        // RecyclerView 세팅
         val recyclerView = bottomSheetView.findViewById<RecyclerView>(R.id.rv_bottom_item)
         val adapter = BottomAdapter()
         val itemList = listOf(
@@ -45,7 +74,6 @@ class CalendarActivity : Fragment() {
         recyclerView.adapter = adapter
         adapter.submitList(itemList)
 
-        // BottomSheetDialog 설정
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         bottomSheetDialog.setContentView(bottomSheetView)
         bottomSheetDialog.show()
@@ -62,16 +90,5 @@ class CalendarActivity : Fragment() {
             behavior.peekHeight = halfScreenHeight
             behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
         }
-
-        //val textView: TextView = binding.textHome
-        calendarViewModel.text.observe(viewLifecycleOwner) {
-            //textView.text = it
-        }
-        return root
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
