@@ -29,7 +29,6 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import com.example.posee.R
 
-
 class CameraActivity : Fragment() {
 
     private var _binding: FragmentCameraBinding? = null
@@ -40,6 +39,9 @@ class CameraActivity : Fragment() {
     private val executor = Executors.newSingleThreadExecutor()
     private var latestImageProxy: ImageProxy? = null
 
+    // ✅ 3가지 클래스 이름
+    private val classes = arrayOf("proper posture", "wrong posture", "too close")
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -48,55 +50,50 @@ class CameraActivity : Fragment() {
     }
 
     private fun setGuideTextStyle() {
-        val text = "버튼을 눌러서\n올바른 자세인지 아닌지를\n확인할 수 있어요"
+        val text = "버튼을 누르어\n올바른 자세인지 아니지를\n확인할 수 있어요"
         val spannable = SpannableString(text)
 
-        // 보라색 강조할 범위 지정
         val purple = ContextCompat.getColor(requireContext(), R.color.purple_500)
-        spannable.setSpan(
-            ForegroundColorSpan(purple),
-            0, 2, // "버튼"
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        spannable.setSpan(
-            ForegroundColorSpan(purple),
-            7, 17, // "올바른 자세인지 아닌지"
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
+        spannable.setSpan(ForegroundColorSpan(purple), 0, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(purple), 7, 17, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         binding.guideText.text = spannable
     }
 
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            setGuideTextStyle()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setGuideTextStyle()
 
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-                startCamera()
-            } else {
-                ActivityCompat.requestPermissions(requireActivity(),
-                    arrayOf(Manifest.permission.CAMERA), 100)
-            }
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            startCamera()
+        } else {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.CAMERA), 100
+            )
+        }
 
-            interpreter = Interpreter(loadModelFile("model.tflite"))
+        interpreter = Interpreter(loadModelFile("model.tflite"))
 
-            // 화면 터치 시 안내사항 숨기기
-            binding.guideCover.setOnClickListener {
-                binding.guideCover.visibility = View.GONE
-                binding.guideText.visibility = View.GONE
-                binding.guideLine.visibility = View.GONE
-            }
+        binding.guideCover.setOnClickListener {
+            binding.guideCover.visibility = View.GONE
+            binding.guideText.visibility = View.GONE
+            binding.guideLine.visibility = View.GONE
+        }
 
         binding.btnAnalyze.setOnClickListener {
             latestImageProxy?.let { imageProxy ->
                 val bitmap = imageProxyToBitmap(imageProxy)
                 val input = preprocess(bitmap)
-                val output = Array(1) { FloatArray(1) }
+
+                val output = Array(1) { FloatArray(3) } // ✅ [1, 3] shape
                 interpreter.run(input, output)
 
-                val confidence = output[0][0]
-                val resultText = if (confidence > 0.5) "wrong posture" else "proper posture"
+                val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
+                val resultText = classes[maxIdx]
+
                 binding.result.text = resultText
                 showResultBubble(resultText)
 
@@ -129,7 +126,6 @@ class CameraActivity : Fragment() {
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
             cameraProvider.bindToLifecycle(this, cameraSelector, preview, analyzer)
-
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
@@ -184,18 +180,19 @@ class CameraActivity : Fragment() {
 
     private fun showResultBubble(result: String) {
         val message = when (result) {
-            "proper posture" -> "아주 좋은 자세예요!"
-            "wrong posture" -> "너무 가까워요!"
+            "proper posture" -> "아저 좋은 자세예요!"
+            "wrong posture" -> "자세를 조금만 고쳐볼까요!"
+            "too close" -> "너무 가까워요!"
             else -> "결과를 알 수 없습니다."
         }
 
         val dialog = Dialog(requireContext())
-        val view = layoutInflater.inflate(com.example.posee.R.layout.dialog_result_bubble, null)
+        val view = layoutInflater.inflate(R.layout.dialog_result_bubble, null)
 
-        val messageText = view.findViewById<TextView>(com.example.posee.R.id.messageText)
-        val appNameText = view.findViewById<TextView>(com.example.posee.R.id.appName)
-        val timeText = view.findViewById<TextView>(com.example.posee.R.id.timeText)
-        val closeBtn = view.findViewById<TextView>(com.example.posee.R.id.closeBtn)
+        val messageText = view.findViewById<TextView>(R.id.messageText)
+        val appNameText = view.findViewById<TextView>(R.id.appName)
+        val timeText = view.findViewById<TextView>(R.id.timeText)
+        val closeBtn = view.findViewById<TextView>(R.id.closeBtn)
 
         messageText.text = message
         appNameText.text = "Posee"
