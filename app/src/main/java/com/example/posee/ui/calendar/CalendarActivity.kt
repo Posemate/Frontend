@@ -1,6 +1,7 @@
 package com.example.posee.ui.calendar
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -8,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CalendarView
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,7 @@ import com.example.poseeui.BottomAdapter
 import com.example.poseeui.BottomItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.navigation.NavigationView
 
 class CalendarActivity : Fragment() {
 
@@ -92,10 +95,17 @@ class CalendarActivity : Fragment() {
         adapter.submitList(itemList)
 
         val bottomSheetDialog = BottomSheetDialog(requireContext())
+
+        // BottomSheetDialog 배경 투명하게 설정
+        bottomSheetDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         bottomSheetDialog.setContentView(bottomSheetView)
         bottomSheetDialog.show()
 
+        // 내부 View의 기본 배경도 제거 (투명하게)
         val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        bottomSheet?.setBackgroundResource(android.R.color.transparent)
+
         bottomSheet?.let {
             it.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             it.requestLayout()
