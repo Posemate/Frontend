@@ -27,13 +27,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="목 전체를 위한 가벼운 스트레칭"
-        android:textSize="18sp"
+        android:textSize="17sp"
         android:textStyle="bold"
 
         android:textColor="@color/black"
         app:layout_constraintTop_toBottomOf="@+id/item_category"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginHorizontal="20dp" />
 
     <TextView
@@ -41,16 +41,20 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="목의 긴장을 풀고 유연성을 높이기"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:textColor="@color/dark_gray"
+        android:maxLines="1"
+        android:ellipsize="end"
         app:layout_constraintTop_toBottomOf="@+id/item_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"
         android:layout_marginHorizontal="20dp"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <TextView
+        android:id="@+id/item_go"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="보러 가기 >"

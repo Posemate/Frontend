@@ -1,9 +1,21 @@
 package com.example.posee.ui.calendar
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CalendarView
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +25,7 @@ import com.example.poseeui.BottomAdapter
 import com.example.poseeui.BottomItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.navigation.NavigationView
 
 class CalendarActivity : Fragment() {
 
@@ -21,6 +34,11 @@ class CalendarActivity : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,10 +50,41 @@ class CalendarActivity : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-// 👉 여기서 바텀시트 뷰 inflate
+
+        // toolbar
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
+        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
+
+
+        //val textView: TextView = binding.textHome
+        calendarViewModel.text.observe(viewLifecycleOwner) {
+            //textView.text = it
+        }
+
+        val calendarView = binding.root.findViewById<CalendarView>(R.id.calendar_view)
+
+        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            // month는 0부터 시작하므로 +1 해줘야 합니다!
+            val formattedDate = "${year}년 ${month + 1}월 ${dayOfMonth}일"
+            showBottomSheet(formattedDate)
+        }
+
+        return root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun showBottomSheet(dateString: String) {
         val bottomSheetView = layoutInflater.inflate(R.layout.activity_bottom_sheet, null)
 
-        // RecyclerView & Adapter 연결
+        // 날짜 텍스트 설정
+        val dateTextView = bottomSheetView.findViewById<TextView>(R.id.calendar_date)
+        dateTextView.text = dateString
+
+        // RecyclerView 세팅
         val recyclerView = bottomSheetView.findViewById<RecyclerView>(R.id.rv_bottom_item)
         val adapter = BottomAdapter()
         val itemList = listOf(
@@ -45,12 +94,18 @@ class CalendarActivity : Fragment() {
         recyclerView.adapter = adapter
         adapter.submitList(itemList)
 
-        // BottomSheetDialog 설정
         val bottomSheetDialog = BottomSheetDialog(requireContext())
+
+        // BottomSheetDialog 배경 투명하게 설정
+        bottomSheetDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         bottomSheetDialog.setContentView(bottomSheetView)
         bottomSheetDialog.show()
 
+        // 내부 View의 기본 배경도 제거 (투명하게)
         val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        bottomSheet?.setBackgroundResource(android.R.color.transparent)
+
         bottomSheet?.let {
             it.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             it.requestLayout()
@@ -62,16 +117,22 @@ class CalendarActivity : Fragment() {
             behavior.peekHeight = halfScreenHeight
             behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
         }
-
-        //val textView: TextView = binding.textHome
-        calendarViewModel.text.observe(viewLifecycleOwner) {
-            //textView.text = it
-        }
-        return root
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.alarm_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    // drawer 연결
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_notification -> {
+                val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+                drawerLayout.openDrawer(android.view.Gravity.END)  // 오른쪽에서 drawer 열기
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

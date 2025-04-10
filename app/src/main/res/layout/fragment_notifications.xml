@@ -1,128 +1,173 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/drawer_layout_my"
     tools:context=".ui.mypage.MypageActivity"
     android:background="@color/background">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="김하연님의 통계"
-        android:id="@+id/mypage_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="50dp"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#000000"/>
-
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/my_chart_background"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/rounded_item"
-        app:layout_constraintTop_toBottomOf="@+id/mypage_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginVertical="22dp"
-        android:layout_marginHorizontal="20dp" >
+        android:layout_height="match_parent"
+        android:background="@color/background" >
 
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/my_chart"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_my"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="wrap_content"
+            android:title="마이페이지"
+            android:gravity="center"
+            android:titleTextColor="@android:color/white"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginBottom="20dp"
-            android:layout_marginTop="30dp"/>
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="28dp"
+            />
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="마이페이지"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="@+id/toolbar_my"
+            app:layout_constraintStart_toStartOf="@+id/toolbar_my"
+            app:layout_constraintEnd_toEndOf="@+id/toolbar_my"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar_my" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="김하연님의 통계"
+            android:id="@+id/mypage_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="100dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#000000"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/my_chart_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_item"
+            app:layout_constraintTop_toBottomOf="@+id/mypage_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginVertical="22dp"
+            android:layout_marginHorizontal="20dp" >
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/my_chart"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="30dp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <FrameLayout
+            android:id="@+id/stretch_left"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/rounded_purple"
+            app:layout_constraintTop_toBottomOf="@+id/my_chart_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/stretch_right"
+            app:layout_constraintWidth="0.5"
+            app:layout_constraintDimensionRatio="1:1"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="나에게 필요한 \n목·어깨 스트레칭"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_gravity="top"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="18dp"/>
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/neck"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="25dp"/>
+
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/stretch_right"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/rounded_blue"
+            app:layout_constraintTop_toTopOf="@+id/stretch_left"
+            app:layout_constraintStart_toEndOf="@+id/stretch_left"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth="0.5"
+            app:layout_constraintDimensionRatio="1:1"
+            android:layout_marginEnd="20dp"
+            android:layout_marginStart="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="나에게 필요한 \n눈 운동"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_gravity="top"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="18dp"/>
+
+            <ImageView
+                android:layout_width="74dp"
+                android:layout_height="74dp"
+                android:src="@drawable/eyes"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="7dp"/>
+
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/logout"
+            android:textSize="14sp"
+            android:textColor="@color/medium_gray"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="65dp" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/notification_drawer"
+        android:layout_width="340dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@android:color/white"
+        app:headerLayout="@layout/notification_drawer_content"/>
 
-    <FrameLayout
-        android:id="@+id/stretch_left"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/rounded_purple"
-        app:layout_constraintTop_toBottomOf="@+id/my_chart_background"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/stretch_right"
-        app:layout_constraintWidth="0.5"
-        app:layout_constraintDimensionRatio="1:1"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="나에게 필요한 \n목·어깨 스트레칭"
-            android:textSize="20sp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:layout_gravity="top"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="15dp"
-            android:layout_marginTop="18dp"/>
-
-        <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:src="@drawable/neck"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="25dp"/>
-
-    </FrameLayout>
-    <FrameLayout
-        android:id="@+id/stretch_right"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/rounded_blue"
-        app:layout_constraintTop_toTopOf="@+id/stretch_left"
-        app:layout_constraintStart_toEndOf="@+id/stretch_left"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth="0.5"
-        app:layout_constraintDimensionRatio="1:1"
-        android:layout_marginEnd="20dp"
-        android:layout_marginStart="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="나에게 필요한 \n눈 운동"
-            android:textSize="20sp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:layout_gravity="top"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="15dp"
-            android:layout_marginTop="18dp"/>
-
-        <ImageView
-            android:layout_width="74dp"
-            android:layout_height="74dp"
-            android:src="@drawable/eyes"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="18dp"
-            android:layout_marginBottom="7dp"/>
-
-    </FrameLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/logout"
-        android:textSize="14sp"
-        android:textColor="@color/medium_gray"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="65dp" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

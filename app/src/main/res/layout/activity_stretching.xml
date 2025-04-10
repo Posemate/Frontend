@@ -1,51 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.stretching.StretchingActivity"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:fillViewport="true">
 
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="김하연님을 위한 목·어깨 스트레칭 추천"
-        android:id="@+id/neck_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="144dp"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"/>
+        tools:context=".ui.stretching.StretchingActivity">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="지금 나에게 필요한 맞춤 스트레칭을 추천해 드려요"
-        android:id="@+id/neck_sub"
-        app:layout_constraintStart_toStartOf="@id/neck_title"
-        app:layout_constraintTop_toBottomOf="@id/neck_title"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="8dp"
-        android:textSize="14sp"
-        android:textColor="@color/dark_gray"/>
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_stretch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="20dp"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_item"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@+id/neck_sub"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:spanCount="1"
-        tools:listitem="@layout/item"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="20dp"/>
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="목·어깨 스트레칭"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="@+id/toolbar_stretch"
+            app:layout_constraintStart_toStartOf="@+id/toolbar_stretch"
+            app:layout_constraintEnd_toEndOf="@+id/toolbar_stretch"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar_stretch" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="김하연님을 위한 목·어깨 스트레칭 추천"
+            android:id="@+id/neck_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="28dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="100dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="지금 나에게 필요한 맞춤 스트레칭을 추천해 드려요"
+            android:id="@+id/neck_sub"
+            app:layout_constraintStart_toStartOf="@id/neck_title"
+            app:layout_constraintTop_toBottomOf="@id/neck_title"
+            android:layout_marginStart="28dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="8dp"
+            android:textSize="13sp"
+            android:textColor="@color/dark_gray"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toBottomOf="@+id/neck_sub"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:spanCount="1"
+            tools:listitem="@layout/item"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="20dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
