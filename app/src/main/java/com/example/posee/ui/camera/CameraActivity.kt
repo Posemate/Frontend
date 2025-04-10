@@ -180,7 +180,7 @@ class CameraActivity : Fragment() {
 
     private fun showResultBubble(result: String) {
         val message = when (result) {
-            "proper posture" -> "아저 좋은 자세예요!"
+            "proper posture" -> "아주 좋은 자세예요!"
             "wrong posture" -> "자세를 조금만 고쳐볼까요!"
             "too close" -> "너무 가까워요!"
             else -> "결과를 알 수 없습니다."
