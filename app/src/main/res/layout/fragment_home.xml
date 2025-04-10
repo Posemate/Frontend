@@ -59,10 +59,10 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/notification_drawer"
-        android:layout_width="280dp"
+        android:layout_width="340dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
         android:background="@android:color/white"
-        app:menu="@menu/menu_notification" />
+        app:headerLayout="@layout/notification_drawer_content" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

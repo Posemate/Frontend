@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@android:color/white">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="end"
+        android:src="@drawable/ic_close"
+        android:contentDescription="닫기"
+        android:id="@+id/btn_close_drawer" />
+
+    <!-- 목 알림 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="목을 위한 알림"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/switch_neck"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="목의 각도가 올바르지 않을 때 바로 자세를 위한 알림을 받아요."
+        android:textSize="13sp"
+        android:textColor="@color/medium_gray"
+        android:lineSpacingMultiplier="1.2"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="48dp"/>
+
+    <!-- 눈 알림 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="36dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="눈을 위한 알림"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/switch_eye"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="눈과 화면 사이의 거리가 가까워졌을 때 시선 거리 유지를 위한 알림을 받아요."
+        android:textSize="13sp"
+        android:textColor="@color/medium_gray"
+        android:lineSpacingMultiplier="1.2"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="48dp"/>
+
+    <!-- 오버레이 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="36dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="오버레이"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/switch_overlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="자세 교정이 필요할 때 오버레이를 활용하여 올바른 자세를 형성할 수 있어요."
+        android:textSize="13sp"
+        android:textColor="@color/medium_gray"
+        android:lineSpacingMultiplier="1.2"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="48dp"/>
+
+</LinearLayout>
