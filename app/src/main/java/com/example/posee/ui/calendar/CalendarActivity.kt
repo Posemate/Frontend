@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +32,11 @@ class CalendarActivity : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,7 +51,6 @@ class CalendarActivity : Fragment() {
         // toolbar
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
-        setHasOptionsMenu(true)
 
 
         //val textView: TextView = binding.textHome
@@ -112,7 +117,8 @@ class CalendarActivity : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_notification -> {
-                Toast.makeText(requireContext(), "알림 클릭됨!", Toast.LENGTH_SHORT).show()
+                val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+                drawerLayout.openDrawer(android.view.Gravity.END)  // 오른쪽에서 drawer 열기
                 true
             }
             else -> super.onOptionsItemSelected(item)

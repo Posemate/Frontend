@@ -22,19 +22,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:paddingVertical="12dp"
-            android:paddingHorizontal="20dp">
+            android:paddingHorizontal="20dp"/>
 
-            <TextView
-                android:id="@+id/toolbar_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="목·어깨 스트레칭"
-                android:textColor="@android:color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:paddingEnd="56dp"/>
-        </androidx.appcompat.widget.Toolbar>
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="목·어깨 스트레칭"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="@+id/toolbar_stretch"
+            app:layout_constraintStart_toStartOf="@+id/toolbar_stretch"
+            app:layout_constraintEnd_toEndOf="@+id/toolbar_stretch"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar_stretch" />
 
         <TextView
             android:layout_width="match_parent"
