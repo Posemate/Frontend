@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="24dp"
     android:background="@android:color/white">
@@ -35,7 +36,9 @@
         <Switch
             android:id="@+id/switch_neck"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:thumbTint="@color/switch_thumb_color"
+            android:trackTint="@color/switch_track_color"/>
     </LinearLayout>
 
     <TextView
@@ -69,7 +72,9 @@
         <Switch
             android:id="@+id/switch_eye"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:thumbTint="@color/switch_thumb_color"
+            android:trackTint="@color/switch_track_color"/>
     </LinearLayout>
 
     <TextView
@@ -103,7 +108,9 @@
         <Switch
             android:id="@+id/switch_overlay"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:thumbTint="@color/switch_thumb_color"
+            android:trackTint="@color/switch_track_color"/>
     </LinearLayout>
 
     <TextView
