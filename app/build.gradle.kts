@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-
+    // 기존 라이브러리
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -52,16 +52,26 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.metadata)
+
+    // 👇 추가된 부분 (CameraX)
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+    implementation("androidx.camera:camera-extensions:1.3.0")
+
+    // 👇 선택 사항 (TFLite interpreter 명시)
+    implementation("org.tensorflow:tensorflow-lite:2.13.0")
+
+    // 기타
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.google.android.material:material:1.6.0")
     implementation(libs.androidx.activity)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    // mp android chart
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    // 리사이클러뷰
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    // bottom sheet
-    implementation("com.google.android.material:material:1.6.0")
 }

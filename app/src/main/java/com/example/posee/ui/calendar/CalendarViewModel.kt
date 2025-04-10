@@ -1,4 +1,4 @@
-package com.example.posee.ui.calender
+package com.example.posee.ui.calendar
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
