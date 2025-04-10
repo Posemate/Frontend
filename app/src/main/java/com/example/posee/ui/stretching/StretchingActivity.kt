@@ -7,17 +7,29 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.posee.R
+import com.example.posee.databinding.ActivityStretchingBinding
 
 class StretchingActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityStretchingBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        binding = ActivityStretchingBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         setContentView(R.layout.activity_stretching)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        // toolbar
+        setSupportActionBar(binding.toolbarStretch)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         // recycler view 연결
         val recyclerView = findViewById<RecyclerView>(R.id.rv_item)
