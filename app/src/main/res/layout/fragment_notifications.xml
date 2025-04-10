@@ -7,6 +7,34 @@
     tools:context=".ui.mypage.MypageActivity"
     android:background="@color/background">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_my"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:title="마이페이지"
+        android:gravity="center"
+        android:titleTextColor="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingVertical="12dp"
+        android:paddingHorizontal="28dp"
+        >
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="마이페이지"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingStart="36dp"
+            />
+
+    </androidx.appcompat.widget.Toolbar>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,7 +44,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="20dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="100dp"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#000000"/>
@@ -63,7 +91,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="나에게 필요한 \n목·어깨 스트레칭"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textColor="@android:color/white"
             android:textStyle="bold"
             android:layout_gravity="top"
@@ -97,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="나에게 필요한 \n눈 운동"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textColor="@android:color/white"
             android:textStyle="bold"
             android:layout_gravity="top"
