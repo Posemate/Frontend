@@ -7,6 +7,34 @@
     tools:context=".ui.calendar.CalendarActivity"
     android:background="@color/background">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:title="캘린더"
+        android:gravity="center"
+        android:titleTextColor="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingVertical="12dp"
+        android:paddingHorizontal="28dp"
+        >
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="캘린더"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingStart="36dp"
+            />
+
+    </androidx.appcompat.widget.Toolbar>
+
     <CalendarView
         android:id="@+id/calendar_view"
         android:layout_width="match_parent"
