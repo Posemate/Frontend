@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.posee.R
@@ -84,10 +85,12 @@ class MypageActivity : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
     }
 
+    // drawer 연결
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_notification -> {
-                Toast.makeText(requireContext(), "알림 클릭됨!", Toast.LENGTH_SHORT).show()
+                val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
+                drawerLayout.openDrawer(android.view.Gravity.END)  // 오른쪽에서 drawer 열기
                 true
             }
             else -> super.onOptionsItemSelected(item)

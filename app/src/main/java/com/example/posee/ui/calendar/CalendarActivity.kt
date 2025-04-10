@@ -114,6 +114,7 @@ class CalendarActivity : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
     }
 
+    // drawer 연결
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_notification -> {
