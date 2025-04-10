@@ -21,7 +21,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:paddingVertical="24dp"
+            android:paddingVertical="12dp"
             android:paddingHorizontal="20dp">
 
             <TextView
@@ -32,7 +32,8 @@
                 android:text="목·어깨 스트레칭"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:paddingEnd="56dp"/>
         </androidx.appcompat.widget.Toolbar>
 
         <TextView
@@ -42,10 +43,10 @@
             android:id="@+id/neck_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="28dp"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="100dp"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/black"/>
 
@@ -56,10 +57,10 @@
             android:id="@+id/neck_sub"
             app:layout_constraintStart_toStartOf="@id/neck_title"
             app:layout_constraintTop_toBottomOf="@id/neck_title"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="28dp"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="8dp"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textColor="@color/dark_gray"/>
 
         <androidx.recyclerview.widget.RecyclerView

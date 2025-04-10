@@ -1,6 +1,7 @@
 package com.example.posee.ui.stretching
 
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -20,7 +21,6 @@ class StretchingActivity : AppCompatActivity() {
         binding = ActivityStretchingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setContentView(R.layout.activity_stretching)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -29,6 +29,7 @@ class StretchingActivity : AppCompatActivity() {
 
         // toolbar
         setSupportActionBar(binding.toolbarStretch)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         // recycler view 연결
@@ -43,5 +44,15 @@ class StretchingActivity : AppCompatActivity() {
         )
         recyclerView.adapter = adapter
         adapter.submitList(itemList)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()  // 현재 액티비티 종료 → 뒤로가기
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }
