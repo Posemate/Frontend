@@ -39,7 +39,7 @@ class CameraActivity : Fragment() {
     private val executor = Executors.newSingleThreadExecutor()
     private var latestImageProxy: ImageProxy? = null
 
-    // ✅ 3가지 클래스 이름
+    // 3가지 클래스 이름
     private val classes = arrayOf("proper posture", "wrong posture", "too close")
 
     override fun onCreateView(
@@ -88,7 +88,7 @@ class CameraActivity : Fragment() {
                 val bitmap = imageProxyToBitmap(imageProxy)
                 val input = preprocess(bitmap)
 
-                val output = Array(1) { FloatArray(3) } // ✅ [1, 3] shape
+                val output = Array(1) { FloatArray(3) } // [1, 3] shape
                 interpreter.run(input, output)
 
                 val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
