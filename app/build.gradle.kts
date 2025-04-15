@@ -67,6 +67,9 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.google.android.material:material:1.6.0")
+
+    implementation("com.github.prolificinteractive:material-calendarview:2.0.0")
+
     implementation(libs.androidx.activity)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)

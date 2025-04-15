@@ -42,7 +42,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/toolbar"
             />
 
-        <CalendarView
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
             android:id="@+id/calendar_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,9 +51,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginHorizontal="28dp"
             android:layout_marginTop="141dp"
+            android:padding="16dp"
             android:background="@drawable/rounded_item"
-            android:elevation="2dp"
-            android:focusedMonthDateColor="@color/main"/>
+            app:mcv_selectionColor="@color/main"
+            app:mcv_firstDayOfWeek="sunday"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
