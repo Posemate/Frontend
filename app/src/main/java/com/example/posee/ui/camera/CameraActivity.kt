@@ -31,6 +31,7 @@ import com.example.posee.R
 
 class CameraActivity : Fragment() {
 
+
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
     private lateinit var interpreter: Interpreter
