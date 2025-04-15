@@ -241,4 +241,12 @@ class CalendarActivity : Fragment() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        // Activity에 있는 DrawerLayout을 가져와서 닫기
+        val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+        // Drawer가 열려 있다면 닫기 (오른쪽 Drawer인 경우 Gravity.END 사용)
+        drawerLayout.closeDrawer(Gravity.END)
+    }
 }
