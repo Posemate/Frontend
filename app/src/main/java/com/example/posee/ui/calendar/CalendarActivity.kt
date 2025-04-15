@@ -1,5 +1,6 @@
 package com.example.posee.ui.calendar
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -10,9 +11,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CalendarView
 import android.widget.ImageView
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -124,6 +127,54 @@ class CalendarActivity : Fragment() {
         return root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Drawer 내부에 위치한 알림 스위치 상태 저장
+        val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
+        val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
+        val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
+
+        if (switchEye == null || switchNeck == null || switchOverlay == null) {
+            // 스위치 중 하나라도 null이면 로그를 남기고 조기 리턴
+            Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 저장된 상태 불러와 초기 상태 적용
+        switchEye.isChecked = loadSwitchState("eye_switch_state")
+        switchNeck.isChecked = loadSwitchState("neck_switch_state")
+        switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
+
+        // 스위치 상태 변경 시 SharedPreferences에 저장
+        switchEye.setOnCheckedChangeListener { _, isChecked ->
+            saveSwitchState("eye_switch_state", isChecked)
+        }
+
+        switchNeck.setOnCheckedChangeListener { _, isChecked ->
+            saveSwitchState("neck_switch_state", isChecked)
+        }
+
+        switchOverlay.setOnCheckedChangeListener { _, isChecked ->
+            saveSwitchState("overlay_switch_state", isChecked)
+        }
+    }
+
+    // SharedPreferences를 통해 스위치 상태 저장
+    private fun saveSwitchState(key: String, isChecked: Boolean) {
+        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean(key, isChecked)
+            apply()
+        }
+    }
+
+    // SharedPreferences를 통해 저장된 스위치 상태 불러오기 (저장된 값이 없으면 기본값 false)
+    private fun loadSwitchState(key: String): Boolean {
+        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(key, false)  // 기본값은 false로 지정
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -188,5 +239,4 @@ class CalendarActivity : Fragment() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
 }
