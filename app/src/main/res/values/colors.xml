@@ -14,4 +14,13 @@
     <color name="medium_gray">#999999</color>
     <color name="dark_gray">#767676</color>
     <color name="gray">#CBCDD8</color>
+    <color name="main_10">#1AB23FFF</color>
+    <color name="main_20">#33B23FFF</color>
+    <color name="main_30">#4DB23FFF</color>
+    <color name="main_40">#66B23FFF</color>
+    <color name="main_50">#80B23FFF</color>
+    <color name="main_60">#99B23FFF</color>
+    <color name="main_70">#B3B23FFF</color>
+    <color name="main_80">#CCB23FFF</color>
+    <color name="main_90">#E6B23FFF</color>
 </resources>

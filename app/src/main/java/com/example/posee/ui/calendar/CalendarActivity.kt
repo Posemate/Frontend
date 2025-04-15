@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -76,6 +77,42 @@ class CalendarActivity : Fragment() {
 
         // 달력 초기화 옵션 (예: 오늘 날짜로 셋팅)
         calendarView.selectedDate = CalendarDay.today()
+
+        // 색 설정
+        val eventDates1 = listOf(
+            CalendarDay.from(2025, 4, 18),
+            CalendarDay.from(2025, 4, 20),
+            CalendarDay.from(2025, 4, 22)
+        )
+        val eventDates2 = listOf(
+            CalendarDay.from(2025, 4, 1),
+            CalendarDay.from(2025, 4, 4),
+            CalendarDay.from(2025, 4, 21)
+        )
+        val eventDates3 = listOf(
+            CalendarDay.from(2025, 4, 5),
+            CalendarDay.from(2025, 4, 17),
+            CalendarDay.from(2025, 4, 20)
+        )
+        val eventDates4 = listOf(
+            CalendarDay.from(2025, 4, 6),
+            CalendarDay.from(2025, 4, 10),
+            CalendarDay.from(2025, 4, 29)
+        )
+        // ContextCompat.getColor()를 사용해 색상을 리소스에서 가져옵니다.
+        val eventColor1 = ContextCompat.getColor(requireContext(), R.color.main_20)
+        val eventColor2 = ContextCompat.getColor(requireContext(), R.color.main_40)
+        val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_60)
+        val eventColor4 = ContextCompat.getColor(requireContext(), R.color.main_90)
+
+        // 커스텀 데코레이터(EventDecorator)를 적용합니다.
+        calendarView.addDecorator(CalendarDecorator(eventColor1, eventDates1))
+        calendarView.addDecorator(CalendarDecorator(eventColor2, eventDates2))
+        calendarView.addDecorator(CalendarDecorator(eventColor3, eventDates3))
+        calendarView.addDecorator(CalendarDecorator(eventColor4, eventDates4))
+
+        // 필요시 데코레이터 갱신
+        calendarView.invalidateDecorators()
 
         /**
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->

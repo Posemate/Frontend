@@ -53,7 +53,6 @@
             android:layout_marginTop="141dp"
             android:padding="16dp"
             android:background="@drawable/rounded_item"
-            android:elevation="2dp"
             app:mcv_selectionColor="@color/main"
             app:mcv_firstDayOfWeek="sunday"/>
 
