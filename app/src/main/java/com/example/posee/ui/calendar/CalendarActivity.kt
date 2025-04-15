@@ -130,33 +130,35 @@ class CalendarActivity : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Drawer 내부에 위치한 알림 스위치 상태 저장
-        val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
-        val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
-        val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
+        view.post {
+            // Drawer 내부에 위치한 알림 스위치 상태 저장
+            val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
+            val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
+            val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
 
-        if (switchEye == null || switchNeck == null || switchOverlay == null) {
-            // 스위치 중 하나라도 null이면 로그를 남기고 조기 리턴
-            Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
-            return
-        }
+            if (switchEye == null || switchNeck == null || switchOverlay == null) {
+                // 스위치 중 하나라도 null이면 로그를 남기고 조기 리턴
+                Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
+                return@post
+            }
 
-        // 저장된 상태 불러와 초기 상태 적용
-        switchEye.isChecked = loadSwitchState("eye_switch_state")
-        switchNeck.isChecked = loadSwitchState("neck_switch_state")
-        switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
+            // 저장된 상태 불러와 초기 상태 적용
+            switchEye.isChecked = loadSwitchState("eye_switch_state")
+            switchNeck.isChecked = loadSwitchState("neck_switch_state")
+            switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
 
-        // 스위치 상태 변경 시 SharedPreferences에 저장
-        switchEye.setOnCheckedChangeListener { _, isChecked ->
-            saveSwitchState("eye_switch_state", isChecked)
-        }
+            // 스위치 상태 변경 시 SharedPreferences에 저장
+            switchEye.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("eye_switch_state", isChecked)
+            }
 
-        switchNeck.setOnCheckedChangeListener { _, isChecked ->
-            saveSwitchState("neck_switch_state", isChecked)
-        }
+            switchNeck.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("neck_switch_state", isChecked)
+            }
 
-        switchOverlay.setOnCheckedChangeListener { _, isChecked ->
-            saveSwitchState("overlay_switch_state", isChecked)
+            switchOverlay.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("overlay_switch_state", isChecked)
+            }
         }
     }
 
