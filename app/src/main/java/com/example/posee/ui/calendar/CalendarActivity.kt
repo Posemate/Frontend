@@ -25,7 +25,10 @@ import com.example.poseeui.BottomAdapter
 import com.example.poseeui.BottomItem
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.navigation.NavigationView
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
+
 
 class CalendarActivity : Fragment() {
 
@@ -34,6 +37,8 @@ class CalendarActivity : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+
+    private lateinit var calendarView: MaterialCalendarView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,13 +66,23 @@ class CalendarActivity : Fragment() {
             //textView.text = it
         }
 
-        val calendarView = binding.root.findViewById<CalendarView>(R.id.calendar_view)
+        val calendarView = binding.root.findViewById<MaterialCalendarView>(R.id.calendar_view)
 
+        // 날짜 선택 리스너 등록
+        calendarView.setOnDateChangedListener(OnDateSelectedListener { widget, date, selected ->
+            val formattedDate = "${date.year}년 ${date.month + 1}월 ${date.day}일"
+            showBottomSheet(formattedDate)
+        })
+
+        // 달력 초기화 옵션 (예: 오늘 날짜로 셋팅)
+        calendarView.selectedDate = CalendarDay.today()
+
+        /**
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             // month는 0부터 시작하므로 +1 해줘야 합니다!
             val formattedDate = "${year}년 ${month + 1}월 ${dayOfMonth}일"
             showBottomSheet(formattedDate)
-        }
+        }**/
 
         return root
     }
@@ -77,6 +92,7 @@ class CalendarActivity : Fragment() {
         _binding = null
     }
 
+    // BottomSheetDialog를 띄워 날짜 정보를 보여주는 함수
     private fun showBottomSheet(dateString: String) {
         val bottomSheetView = layoutInflater.inflate(R.layout.activity_bottom_sheet, null)
 
@@ -135,4 +151,5 @@ class CalendarActivity : Fragment() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 }
