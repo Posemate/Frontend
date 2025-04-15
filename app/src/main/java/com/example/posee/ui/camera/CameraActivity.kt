@@ -94,7 +94,6 @@ class CameraActivity : Fragment() {
                 val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
                 val resultText = classes[maxIdx]
 
-                binding.result.text = resultText
                 showResultBubble(resultText)
 
                 imageProxy.close()
