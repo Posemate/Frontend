@@ -65,36 +65,41 @@
         android:id="@+id/bt_login"
         android:layout_width="360dp"
         android:layout_height="56dp"
-        android:layout_marginStart="28dp"
-        android:layout_marginEnd="28dp"
         android:text="로그인"
         android:background="@drawable/rounded_main_color_background"
         android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/text_group"
+        app:layout_constraintTop_toBottomOf="@+id/et_login_password"/>
+
+    <LinearLayout
+        android:id="@+id/text_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="50dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="30dp">
 
-    <TextView
-        android:id="@+id/tv_login_text1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="116dp"
-        android:layout_marginBottom="20dp"
-        android:text="아직 회원이 아니신가요?"
-        android:textColor="#000000"
-        app:layout_constraintBottom_toTopOf="@id/bt_login"
-        app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tv_login_text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="아직 회원이 아니신가요?"
+            android:textColor="#000000"
+            />
 
-    <TextView
-        android:id="@+id/tv_login_text2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="회원가입"
-        android:textColor="#B23FFF"
-        app:layout_constraintTop_toTopOf="@+id/tv_login_text1"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_login_text1"
-        app:layout_constraintStart_toEndOf="@+id/tv_login_text1"
-        android:layout_marginStart="4dp"/>
+        <TextView
+            android:id="@+id/tv_login_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="회원가입"
+            android:textColor="#B23FFF"
+            android:layout_marginStart="4dp"/>
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/imageView"
