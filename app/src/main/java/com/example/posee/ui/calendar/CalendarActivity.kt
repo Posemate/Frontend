@@ -131,6 +131,19 @@ class CalendarActivity : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.post {
+            // drawer
+            val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+
+            // X 버튼 누르면 닫힘
+            val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
+            closeButton?.setOnClickListener {
+                // 버튼 클릭 시 Drawer 닫기
+                drawerLayout.closeDrawer(Gravity.END) // 오른쪽 Drawer인 경우, 또는 필요에 따라 Gravity.START 사용
+            } ?: run {
+                // null 인 경우 로그 출력
+                Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+
             // Drawer 내부에 위치한 알림 스위치 상태 저장
             val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
             val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
