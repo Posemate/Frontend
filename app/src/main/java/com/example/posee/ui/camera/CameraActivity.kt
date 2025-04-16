@@ -27,6 +27,7 @@ import java.util.concurrent.Executors
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import androidx.drawerlayout.widget.DrawerLayout
 import com.example.posee.R
 
 class CameraActivity : Fragment() {
