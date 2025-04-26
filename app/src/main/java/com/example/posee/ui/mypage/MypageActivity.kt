@@ -16,16 +16,19 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.DefaultTab.AlbumsTab.value
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.posee.R
 import com.example.posee.databinding.FragmentNotificationsBinding
+import com.example.posee.ui.loginSignup.LoginActivity
 import com.example.posee.ui.stretching.StretchingActivity
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.google.firebase.auth.FirebaseAuth
 
 class MypageActivity : Fragment() {
 
@@ -128,6 +131,31 @@ class MypageActivity : Fragment() {
             startActivity(intent)
         }
 
+        val logoutTextView = binding.logoutText  // 로그아웃 TextView
+
+        logoutTextView.setOnClickListener {
+            // 다이얼로그 띄우기
+            val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            builder.setTitle("로그아웃")
+            builder.setMessage("정말 로그아웃 하시겠습니까?")
+            builder.setPositiveButton("네") { _, _ ->
+                // 네 클릭 시 로그아웃 진행
+                FirebaseAuth.getInstance().signOut()  // Firebase 로그아웃
+                Toast.makeText(requireContext(), "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(requireContext(), LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+
+                requireActivity().finish()  // 현재 Activity 종료
+            }
+            builder.setNegativeButton("아니오") { dialog, _ ->
+                // 아니오 클릭 시 다이얼로그 닫기
+                dialog.dismiss()
+            }
+            builder.show()
+        }
+
         return root
     }
 
@@ -142,7 +170,7 @@ class MypageActivity : Fragment() {
             val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
             closeButton?.setOnClickListener {
                 // 버튼 클릭 시 Drawer 닫기
-                drawerLayout.closeDrawer(Gravity.END) // 오른쪽 Drawer인 경우, 또는 필요에 따라 Gravity.START 사용
+                drawerLayout.closeDrawer(GravityCompat.END) // 오른쪽 Drawer인 경우, 또는 필요에 따라 Gravity.START 사용
             } ?: run {
                 // null 인 경우 로그 출력
                 Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -212,7 +240,7 @@ class MypageActivity : Fragment() {
         return when (item.itemId) {
             R.id.action_notification -> {
                 val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
-                drawerLayout.openDrawer(android.view.Gravity.END)  // 오른쪽에서 drawer 열기
+                drawerLayout.openDrawer(GravityCompat.END)  // 오른쪽에서 drawer 열기
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -224,6 +252,6 @@ class MypageActivity : Fragment() {
         // Activity에 있는 DrawerLayout을 가져와서 닫기
         val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
         // Drawer가 열려 있다면 닫기 (오른쪽 Drawer인 경우 Gravity.END 사용)
-        drawerLayout.closeDrawer(Gravity.END)
+        drawerLayout.closeDrawer(GravityCompat.END)
     }
 }
