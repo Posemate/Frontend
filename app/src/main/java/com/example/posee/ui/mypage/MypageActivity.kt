@@ -180,8 +180,9 @@ class MypageActivity : Fragment() {
             val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
             val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
             val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
+            val switchBackground = requireActivity().findViewById<Switch>(R.id.switch_background)
 
-            if (switchEye == null || switchNeck == null || switchOverlay == null) {
+            if (switchEye == null || switchNeck == null || switchOverlay == null || switchBackground == null) {
                 // 스위치 중 하나라도 null이면 로그를 남기고 조기 리턴
                 Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
                 return@post
@@ -191,6 +192,7 @@ class MypageActivity : Fragment() {
             switchEye.isChecked = loadSwitchState("eye_switch_state")
             switchNeck.isChecked = loadSwitchState("neck_switch_state")
             switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
+            switchBackground.isChecked = loadSwitchState("background_switch_state")
 
             // 스위치 상태 변경 시 SharedPreferences에 저장
             switchEye.setOnCheckedChangeListener { _, isChecked ->
@@ -204,6 +206,10 @@ class MypageActivity : Fragment() {
 
             switchOverlay.setOnCheckedChangeListener { _, isChecked ->
                 saveSwitchState("overlay_switch_state", isChecked)
+            }
+
+            switchBackground.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("background_switch_state", isChecked)
             }
         }
     }
@@ -221,8 +227,9 @@ class MypageActivity : Fragment() {
     // SharedPreferences를 통해 저장된 스위치 상태 불러오기 (저장된 값이 없으면 기본값 false)
     private fun loadSwitchState(key: String): Boolean {
         val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
-        Log.e("SwitchState", "Loaded $key = $value")
-        return sharedPref.getBoolean(key, false)  // 기본값은 false로 지정
+        val value = sharedPref.getBoolean(key, false)  // 여기서 value를 먼저 읽고
+        Log.e("SwitchState", "Loaded $key = $value")  // 그리고 로그 찍기
+        return value
     }
 
     override fun onDestroyView() {

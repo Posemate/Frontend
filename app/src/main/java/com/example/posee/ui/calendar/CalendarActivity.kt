@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -138,7 +139,7 @@ class CalendarActivity : Fragment() {
             val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
             closeButton?.setOnClickListener {
                 // 버튼 클릭 시 Drawer 닫기
-                drawerLayout.closeDrawer(Gravity.END) // 오른쪽 Drawer인 경우, 또는 필요에 따라 Gravity.START 사용
+                drawerLayout.closeDrawer(GravityCompat.END) // 오른쪽 Drawer인 경우, 또는 필요에 따라 Gravity.START 사용
             } ?: run {
                 // null 인 경우 로그 출력
                 Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -148,8 +149,9 @@ class CalendarActivity : Fragment() {
             val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
             val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
             val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
+            val switchBackground = requireActivity().findViewById<Switch>(R.id.switch_background)
 
-            if (switchEye == null || switchNeck == null || switchOverlay == null) {
+            if (switchEye == null || switchNeck == null || switchOverlay == null || switchBackground == null) {
                 // 스위치 중 하나라도 null이면 로그를 남기고 조기 리턴
                 Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
                 return@post
@@ -159,6 +161,7 @@ class CalendarActivity : Fragment() {
             switchEye.isChecked = loadSwitchState("eye_switch_state")
             switchNeck.isChecked = loadSwitchState("neck_switch_state")
             switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
+            switchBackground.isChecked = loadSwitchState("background_switch_state")
 
             // 스위치 상태 변경 시 SharedPreferences에 저장
             switchEye.setOnCheckedChangeListener { _, isChecked ->
@@ -171,6 +174,10 @@ class CalendarActivity : Fragment() {
 
             switchOverlay.setOnCheckedChangeListener { _, isChecked ->
                 saveSwitchState("overlay_switch_state", isChecked)
+            }
+
+            switchBackground.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("background_switch_state", isChecked)
             }
         }
     }
@@ -248,7 +255,7 @@ class CalendarActivity : Fragment() {
         return when (item.itemId) {
             R.id.action_notification -> {
                 val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
-                drawerLayout.openDrawer(android.view.Gravity.END)  // 오른쪽에서 drawer 열기
+                drawerLayout.openDrawer(GravityCompat.END)  // 오른쪽에서 drawer 열기
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -260,6 +267,6 @@ class CalendarActivity : Fragment() {
         // Activity에 있는 DrawerLayout을 가져와서 닫기
         val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
         // Drawer가 열려 있다면 닫기 (오른쪽 Drawer인 경우 Gravity.END 사용)
-        drawerLayout.closeDrawer(Gravity.END)
+        drawerLayout.closeDrawer(GravityCompat.END)
     }
 }
