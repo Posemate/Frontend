@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <!-- 카메라 기능 명시 -->
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
-
-    <!-- 필수 권한들 -->
+        android:required="false" /> <!-- 필수 권한들 -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,7 +12,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
 
     <application
         android:allowBackup="true"
@@ -27,14 +23,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="31">
-
+        <activity
+            android:name=".ui.eyeExercise.EyeExerciseActivity"
+            android:exported="false" />
         <!-- 서비스 등록 (백그라운드 카메라용) -->
         <service
             android:name=".ui.camera.PoseDetectionService"
             android:exported="false"
-            android:foregroundServiceType="camera" />
-
-        <!-- 액티비티들 -->
+            android:foregroundServiceType="camera" /> <!-- 액티비티들 -->
         <activity
             android:name=".ui.stretching.StretchingActivity"
             android:exported="false" />
@@ -46,6 +42,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

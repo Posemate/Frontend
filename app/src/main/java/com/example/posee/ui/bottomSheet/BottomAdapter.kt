@@ -3,6 +3,7 @@ package com.example.poseeui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -25,7 +26,10 @@ class BottomAdapter :
     class BottomViewHolder (private val view: View) : RecyclerView.ViewHolder(view) {
         private val time = view.findViewById<TextView>(R.id.count_time)
         private val explanation = view.findViewById<TextView>(R.id.count_explain)
+        private val img = view.findViewById<ImageView>(R.id.count_img)
         fun bind(item: BottomItem) {
+            // R.drawable 내 리소스를 바로 세팅
+            img.setImageResource(item.imageRes)
             time.text = item.time
             explanation.text = item.explanation
         }
