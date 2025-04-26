@@ -214,8 +214,8 @@ class CalendarActivity : Fragment() {
         val recyclerView = bottomSheetView.findViewById<RecyclerView>(R.id.rv_bottom_item)
         val adapter = BottomAdapter()
         val itemList = listOf(
-            BottomItem("17:05", "화면과 너무 가까워요."),
-            BottomItem("16:55", "10분 동안 적당한 거리를 유지했어요.")
+            BottomItem(R.drawable.ic_eyes, "17:05", "화면과 너무 가까워요."),
+            BottomItem(R.drawable.neck,"16:55", "자세를 조금만 고쳐볼까요!")
         )
         recyclerView.adapter = adapter
         adapter.submitList(itemList)
