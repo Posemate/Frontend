@@ -2,6 +2,8 @@ package com.example.posee.ui.camera
 
 import android.Manifest
 import android.app.Dialog
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Bundle
@@ -27,11 +29,9 @@ import java.util.concurrent.Executors
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import androidx.drawerlayout.widget.DrawerLayout
 import com.example.posee.R
 
 class CameraActivity : Fragment() {
-
 
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
@@ -41,7 +41,6 @@ class CameraActivity : Fragment() {
     private val executor = Executors.newSingleThreadExecutor()
     private var latestImageProxy: ImageProxy? = null
 
-    // 3가지 클래스 이름
     private val classes = arrayOf("proper posture", "wrong posture", "too close")
 
     override fun onCreateView(
@@ -66,6 +65,16 @@ class CameraActivity : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setGuideTextStyle()
 
+        // 백그라운드 알림 스위치 상태 확인 후 PoseDetectionService 실행
+        val prefs = requireContext().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
+        val backgroundEnabled = prefs.getBoolean("background_switch_state", false)
+
+        if (backgroundEnabled) {
+            val intent = Intent(requireContext(), PoseDetectionService::class.java)
+            ContextCompat.startForegroundService(requireContext(), intent)
+        }
+
+        // 카메라 퍼미션 체크
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -90,7 +99,7 @@ class CameraActivity : Fragment() {
                 val bitmap = imageProxyToBitmap(imageProxy)
                 val input = preprocess(bitmap)
 
-                val output = Array(1) { FloatArray(3) } // [1, 3] shape
+                val output = Array(1) { FloatArray(3) }
                 interpreter.run(input, output)
 
                 val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
