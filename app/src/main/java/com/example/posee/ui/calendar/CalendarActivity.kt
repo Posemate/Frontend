@@ -142,7 +142,6 @@ class CalendarActivity : Fragment() {
                 saveSwitchState("overlay_switch_state", isChecked)
             }
 
-            /** 백그라운드 알림 스위치 **/
             switchBackground.setOnCheckedChangeListener { _, isChecked ->
                 saveSwitchState("background_switch_state", isChecked)
 
@@ -175,65 +174,42 @@ class CalendarActivity : Fragment() {
     }
 
     private fun showBottomSheet(dateString: String) {
-        // id
-        /*val user = FirebaseAuth.getInstance().currentUser
-        val userId = user?.uid
-            ?: run {
-                Toast.makeText(requireContext(), "로그인 필요", Toast.LENGTH_SHORT).show()
-                return
-            }*/
-
-        // 날짜 문자열을 "YYYY-MM-DD" 포맷으로 변환 (<-2025년 4월 29일)
-        val parts = dateString
-            .replace("년", "-")
-            .replace("월", "-")
-            .replace("일", "")
-            .split("-")
-            .map { it.trim() }
-        // ["2025", "4", "29"]
+        val parts = dateString.replace("년", "-").replace("월", "-").replace("일", "").split("-").map { it.trim() }
         val yyyy = parts[0]
-        val mm   = parts[1].padStart(2, '0')
-        val dd   = parts[2].padStart(2, '0')
-        val dateParam = "$yyyy-$mm-$dd"        // "2025-04-29"
+        val mm = parts[1].padStart(2, '0')
+        val dd = parts[2].padStart(2, '0')
+        val dateParam = "$yyyy-$mm-$dd"
 
         val bottomSheetView = layoutInflater.inflate(R.layout.activity_bottom_sheet, null)
-
         val dateTextView = bottomSheetView.findViewById<TextView>(R.id.calendar_date)
-        dateTextView.text = dateString
-
+        val countTextView = bottomSheetView.findViewById<TextView>(R.id.calendar_count)
         val recyclerView = bottomSheetView.findViewById<RecyclerView>(R.id.rv_bottom_item)
+        val spinner = bottomSheetView.findViewById<Spinner>(R.id.option_spinner)
         val adapter = BottomAdapter()
         recyclerView.adapter = adapter
 
-        // 서버와 연결
-        // Spinner 셋업 (XML의 option_spinner 사용)
-        val spinner = bottomSheetView.findViewById<Spinner>(R.id.option_spinner)
-        // entries 는 이미 @array/options_array 로 XML에서 지정되어 있습니다.
+        dateTextView.text = dateString
+
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>, view: View?, position: Int, id: Long
-            ) {
-                // options_array 순서에 맞춰 필터 결정
-                // 예: ["전체","목","눈"] 순이라면
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val filter = when (position) {
-                    1 -> "poor"   // 목
-                    2 -> "close"  // 눈
-                    else -> "all" // 전체
+                    1 -> "poor"
+                    2 -> "close"
+                    else -> "all"
                 }
 
                 RetrofitClient.apiService()
-                    .getLogs(userId = "hhh", date = dateParam, filter = filter)
+                    .getLogs(userId = "minseo596", date = dateParam, filter = filter)
                     .enqueue(object : Callback<List<AlarmLogResponse>> {
                         override fun onResponse(
                             call: Call<List<AlarmLogResponse>>,
                             response: Response<List<AlarmLogResponse>>
                         ) {
                             if (response.isSuccessful) {
-                                // 서버에서 받은 리스트를 BottomItem 형태로 매핑
                                 val items = response.body()!!.map { dto ->
                                     val resId = when (dto.postureType) {
-                                        3 -> R.drawable.ic_eyes      // postureType=3 → 눈
-                                        2 -> R.drawable.neck          // postureType=2 → 목
+                                        3 -> R.drawable.ic_eyes
+                                        2 -> R.drawable.neck
                                         else -> R.drawable.posee_logo
                                     }
                                     BottomItem(
@@ -247,61 +223,39 @@ class CalendarActivity : Fragment() {
                                     )
                                 }
                                 adapter.submitList(items)
+                                countTextView.text = items.size.toString() // 알림 횟수 표시
                             } else {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "알람 내역 조회 실패: ${response.code()}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(requireContext(), "알람 내역 조회 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                             }
                         }
 
                         override fun onFailure(call: Call<List<AlarmLogResponse>>, t: Throwable) {
-                            Toast.makeText(
-                                requireContext(),
-                                "서버 통신 오류: ${t.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(requireContext(), "서버 통신 오류: ${t.message}", Toast.LENGTH_SHORT).show()
                         }
                     })
             }
 
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-
-        /*val itemList = listOf(
-            BottomItem(R.drawable.ic_eyes, "17:05", "화면과 너무 가까워요."),
-            BottomItem(R.drawable.neck, "16:55", "자세를 조금만 고쳐볼까요!")
-        )
-        recyclerView.adapter = adapter
-        adapter.submitList(itemList)*/
 
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         bottomSheetDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
         bottomSheetDialog.setContentView(bottomSheetView)
         bottomSheetDialog.show()
 
-        val bottomSheet =
-            bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
         bottomSheet?.setBackgroundResource(android.R.color.transparent)
-
         bottomSheet?.let {
             it.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             it.requestLayout()
-
             val displayMetrics = resources.displayMetrics
             val halfScreenHeight = displayMetrics.heightPixels / 2
-
             val behavior = BottomSheetBehavior.from(it)
             behavior.peekHeight = halfScreenHeight
             behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
         }
         spinner.setSelection(0)
     }
-
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.alarm_menu, menu)
