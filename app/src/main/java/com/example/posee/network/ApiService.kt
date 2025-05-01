@@ -11,4 +11,9 @@ interface ApiService {
         @Query("date") date: String,       // "YYYY-MM-DD"
         @Query("filter") filter: String    // "all"|"good"|"poor"|"close"
     ): Call<List<AlarmLogResponse>>
+
+    @GET("api/alarm-logs/count-by-date")
+    fun getAlarmCountByDate(
+        @Query("userId") userId: String
+    ): Call<Map<String, Long>>
 }

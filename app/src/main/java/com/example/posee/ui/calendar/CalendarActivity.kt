@@ -32,6 +32,8 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class CalendarActivity : Fragment() {
 
@@ -57,7 +59,7 @@ class CalendarActivity : Fragment() {
 
         calendarViewModel.text.observe(viewLifecycleOwner) {}
 
-        val calendarView = binding.root.findViewById<MaterialCalendarView>(R.id.calendar_view)
+        calendarView = binding.root.findViewById(R.id.calendar_view)
 
         calendarView.setOnDateChangedListener(OnDateSelectedListener { widget, date, selected ->
             val formattedDate = "${date.year}년 ${date.month}월 ${date.day}일"
@@ -66,38 +68,47 @@ class CalendarActivity : Fragment() {
 
         calendarView.selectedDate = CalendarDay.today()
 
-        val eventDates1 = listOf(
-            CalendarDay.from(2025, 4, 18),
-            CalendarDay.from(2025, 4, 20),
-            CalendarDay.from(2025, 4, 22)
-        )
-        val eventDates2 = listOf(
-            CalendarDay.from(2025, 4, 1),
-            CalendarDay.from(2025, 4, 4),
-            CalendarDay.from(2025, 4, 21)
-        )
-        val eventDates3 = listOf(
-            CalendarDay.from(2025, 4, 5),
-            CalendarDay.from(2025, 4, 17),
-            CalendarDay.from(2025, 4, 20)
-        )
-        val eventDates4 = listOf(
-            CalendarDay.from(2025, 4, 6),
-            CalendarDay.from(2025, 4, 10),
-            CalendarDay.from(2025, 4, 29)
-        )
-
-        val eventColor1 = ContextCompat.getColor(requireContext(), R.color.main_20)
-        val eventColor2 = ContextCompat.getColor(requireContext(), R.color.main_40)
-        val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_60)
+        val eventColor1 = ContextCompat.getColor(requireContext(), R.color.main_10)
+        val eventColor2 = ContextCompat.getColor(requireContext(), R.color.main_30)
+        val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_50)
         val eventColor4 = ContextCompat.getColor(requireContext(), R.color.main_90)
 
-        calendarView.addDecorator(CalendarDecorator(eventColor1, eventDates1))
-        calendarView.addDecorator(CalendarDecorator(eventColor2, eventDates2))
-        calendarView.addDecorator(CalendarDecorator(eventColor3, eventDates3))
-        calendarView.addDecorator(CalendarDecorator(eventColor4, eventDates4))
+        RetrofitClient.apiService().getAlarmCountByDate("minseo596")
+            .enqueue(object : Callback<Map<String, Long>> {
+                override fun onResponse(call: Call<Map<String, Long>>, response: Response<Map<String, Long>>) {
+                    if (response.isSuccessful) {
+                        val countMap = response.body() ?: return
+                        val group1 = mutableListOf<CalendarDay>()
+                        val group2 = mutableListOf<CalendarDay>()
+                        val group3 = mutableListOf<CalendarDay>()
+                        val group4 = mutableListOf<CalendarDay>()
 
-        calendarView.invalidateDecorators()
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                        for ((dateStr, count) in countMap) {
+                            if (count < 5) continue
+                            val localDate = LocalDate.parse(dateStr, formatter)
+                            val calendarDay = CalendarDay.from(localDate.year, localDate.monthValue, localDate.dayOfMonth)
+                            when (count) {
+                                in 0..9 -> group1.add(calendarDay)
+                                in 10..19 -> group2.add(calendarDay)
+                                in 20..29 -> group3.add(calendarDay)
+                                else -> group4.add(calendarDay)
+                            }
+                        }
+
+                        calendarView.addDecorator(CalendarDecorator(eventColor1, group1))
+                        calendarView.addDecorator(CalendarDecorator(eventColor2, group2))
+                        calendarView.addDecorator(CalendarDecorator(eventColor3, group3))
+                        calendarView.addDecorator(CalendarDecorator(eventColor4, group4))
+
+                        calendarView.invalidateDecorators()
+                    }
+                }
+
+                override fun onFailure(call: Call<Map<String, Long>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "서버 통신 실패: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
 
         return root
     }
