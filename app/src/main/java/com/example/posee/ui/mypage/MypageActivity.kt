@@ -2,6 +2,7 @@ package com.example.posee.ui.mypage
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.*
 import android.widget.Switch
@@ -11,29 +12,32 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import com.example.posee.R
 import com.example.posee.databinding.FragmentNotificationsBinding
 import com.example.posee.ui.eyeExercise.EyeExerciseActivity
 import com.example.posee.ui.loginSignup.LoginActivity
 import com.example.posee.ui.stretching.StretchingActivity
 import com.example.posee.ui.camera.PoseDetectionService
+import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.firebase.auth.FirebaseAuth
 
 class MypageActivity : Fragment() {
 
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
+    private val mypageViewModel: MypageViewModel by viewModels()
+
+    private var selectedIndex: Int = -1 // 선택된 막대 index 저장
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        val mypageViewModel = ViewModelProvider(this).get(MypageViewModel::class.java)
-
+    ): View? {
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -41,32 +45,50 @@ class MypageActivity : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
         setHasOptionsMenu(true)
 
-        val chart = binding.myChart
+        val chart = binding.myChart as BarChart
         chart.description.isEnabled = false
         chart.legend.isEnabled = false
 
         mypageViewModel.chartData.observe(viewLifecycleOwner) { entries ->
-            val dataSet = LineDataSet(entries, "Stretching").apply {
-                color = ContextCompat.getColor(requireContext(), R.color.gray)
-                setCircleColor(ContextCompat.getColor(requireContext(), R.color.main))
+
+            val barEntries = entries.map { it.entry }
+
+            val defaultColor = ContextCompat.getColor(requireContext(), R.color.main)
+            val highlightColor = Color.rgb(
+                (Color.red(defaultColor) * 0.98).toInt(),
+                (Color.green(defaultColor) * 0.98).toInt(),
+                (Color.blue(defaultColor) * 0.98).toInt()
+            )
+
+            val dataSet = BarDataSet(barEntries, "Stretching").apply {
+                colors = List(barEntries.size) { defaultColor }
                 valueTextColor = ContextCompat.getColor(requireContext(), R.color.black)
-                lineWidth = 1f
-                setDrawCircles(true)
-                circleRadius = 2f
-                setDrawValues(false)
+                valueTextSize = 11f
+                setDrawValues(true)
+                valueFormatter = object : ValueFormatter() {
+                    override fun getBarLabel(barEntry: BarEntry?): String {
+                        return if (barEntry != null && selectedIndex != -1 &&
+                            barEntry.x == barEntries[selectedIndex].x
+                        ) {
+                            barEntry.y.toString()
+                        } else {
+                            ""
+                        }
+                    }
+                }
             }
 
-            val lineData = LineData(dataSet)
-            chart.data = lineData
+            val barData = BarData(dataSet).apply { barWidth = 0.6f }
+            chart.data = barData
 
             chart.xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
-                axisMinimum = 1f
-                axisMaximum = 12f
+                axisMinimum = 0.5f
+                axisMaximum = 12.5f
                 granularity = 1f
                 labelCount = 12
                 textSize = 11f
-                textColor = ContextCompat.getColor(requireContext(), R.color.main)
+                textColor = ContextCompat.getColor(requireContext(), R.color.dark_gray)
                 valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String {
                         val intVal = value.toInt()
@@ -76,112 +98,89 @@ class MypageActivity : Fragment() {
                 setDrawGridLines(false)
             }
 
+            chart.axisLeft.isEnabled = false
             chart.axisRight.apply {
                 isEnabled = true
                 axisMinimum = 0f
-                axisMaximum = 150f
-                granularity = 50f
+                axisMaximum = 6f
+                granularity = 1f
                 setLabelCount(4, true)
                 textSize = 11f
                 textColor = ContextCompat.getColor(requireContext(), R.color.dark_gray)
-                enableGridDashedLine(2f, 10f, 0f)
-                gridColor = ContextCompat.getColor(requireContext(), R.color.dark_gray)
-                valueFormatter = object : ValueFormatter() {
-                    override fun getFormattedValue(value: Float): String {
-                        return value.toInt().toString()
+            }
+
+            chart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+                override fun onValueSelected(e: Entry?, h: Highlight?) {
+                    e?.let {
+                        val index = barEntries.indexOfFirst { it.x == e.x }
+                        if (index != -1) {
+                            selectedIndex = index
+                            dataSet.colors = List(barEntries.size) { defaultColor }.toMutableList().apply {
+                                this[index] = highlightColor
+                            }
+                            chart.invalidate()
+                        }
                     }
                 }
-            }
-            chart.axisLeft.isEnabled = false
+
+                override fun onNothingSelected() {
+                    selectedIndex = -1
+                    dataSet.colors = List(barEntries.size) { defaultColor }
+                    chart.invalidate()
+                }
+            })
+
             chart.invalidate()
         }
 
-        mypageViewModel.text.observe(viewLifecycleOwner) { }
-
         binding.stretchLeft.setOnClickListener {
-            val intent = Intent(requireContext(), StretchingActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), StretchingActivity::class.java))
         }
 
         binding.stretchRight.setOnClickListener {
-            val intent = Intent(requireContext(), EyeExerciseActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), EyeExerciseActivity::class.java))
         }
 
         binding.logoutText.setOnClickListener {
             val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
             builder.setTitle("로그아웃")
-            builder.setMessage("정말 로그아웃 하시겠습니까?")
-            builder.setPositiveButton("네") { _, _ ->
-                FirebaseAuth.getInstance().signOut()
-                Toast.makeText(requireContext(), "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
-
-                val intent = Intent(requireContext(), LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-
-                requireActivity().finish()
-            }
-            builder.setNegativeButton("아니오") { dialog, _ -> dialog.dismiss() }
-            builder.show()
+                .setMessage("정말 로그아웃 하시겠습니까?")
+                .setPositiveButton("네") { _, _ ->
+                    FirebaseAuth.getInstance().signOut()
+                    Toast.makeText(requireContext(), "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(requireContext(), LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                    requireActivity().finish()
+                }
+                .setNegativeButton("아니오") { dialog, _ -> dialog.dismiss() }
+                .show()
         }
 
-        return root
-    }
+        /** Drawer 및 스위치 설정 **/
+        val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
+        requireActivity().findViewById<View>(R.id.btn_close_drawer)?.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.END)
+        }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        view.post {
-            val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
-            val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
-
-            closeButton?.setOnClickListener {
-                drawerLayout.closeDrawer(GravityCompat.END)
-            } ?: run {
-                Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-            }
-
-            val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
-            val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
-            val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
-            val switchBackground = requireActivity().findViewById<Switch>(R.id.switch_background)
-
-            if (switchEye == null || switchNeck == null || switchOverlay == null || switchBackground == null) {
-                Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
-                return@post
-            }
-
-            switchEye.isChecked = loadSwitchState("eye_switch_state")
-            switchNeck.isChecked = loadSwitchState("neck_switch_state")
-            switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
-            switchBackground.isChecked = loadSwitchState("background_switch_state")
-
-            switchEye.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("eye_switch_state", isChecked)
-            }
-
-            switchNeck.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("neck_switch_state", isChecked)
-            }
-
-            switchOverlay.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("overlay_switch_state", isChecked)
-            }
-
-            /** 백그라운드 알림 스위치 **/
-            switchBackground.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("background_switch_state", isChecked)
-
-                val serviceIntent = Intent(requireContext(), PoseDetectionService::class.java)
-
-                if (isChecked) {
-                    ContextCompat.startForegroundService(requireContext(), serviceIntent)
-                } else {
-                    requireContext().stopService(serviceIntent)
+        listOf("eye", "neck", "overlay", "background").forEach { key ->
+            val switch = requireActivity().findViewById<Switch>(
+                resources.getIdentifier("switch_$key", "id", requireActivity().packageName)
+            )
+            if (switch != null) {
+                switch.isChecked = loadSwitchState("${key}_switch_state")
+                switch.setOnCheckedChangeListener { _, isChecked ->
+                    saveSwitchState("${key}_switch_state", isChecked)
+                    if (key == "background") {
+                        val serviceIntent = Intent(requireContext(), PoseDetectionService::class.java)
+                        if (isChecked) ContextCompat.startForegroundService(requireContext(), serviceIntent)
+                        else requireContext().stopService(serviceIntent)
+                    }
                 }
             }
         }
+
+        return root
     }
 
     private fun saveSwitchState(key: String, isChecked: Boolean) {
@@ -210,8 +209,7 @@ class MypageActivity : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_notification -> {
-                val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
-                drawerLayout.openDrawer(GravityCompat.END)
+                requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my).openDrawer(GravityCompat.END)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -220,7 +218,6 @@ class MypageActivity : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
-        drawerLayout.closeDrawer(GravityCompat.END)
+        requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my).closeDrawer(GravityCompat.END)
     }
 }

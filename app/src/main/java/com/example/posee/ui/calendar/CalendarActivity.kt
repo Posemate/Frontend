@@ -73,7 +73,7 @@ class CalendarActivity : Fragment() {
         val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_50)
         val eventColor4 = ContextCompat.getColor(requireContext(), R.color.main_90)
 
-        RetrofitClient.apiService().getAlarmCountByDate("minseo596")
+        RetrofitClient.apiService().getAlarmCountByDate("dduviosa")
             .enqueue(object : Callback<Map<String, Long>> {
                 override fun onResponse(call: Call<Map<String, Long>>, response: Response<Map<String, Long>>) {
                     if (response.isSuccessful) {
@@ -210,7 +210,7 @@ class CalendarActivity : Fragment() {
                 }
 
                 RetrofitClient.apiService()
-                    .getLogs(userId = "minseo596", date = dateParam, filter = filter)
+                    .getLogs(userId = "dduviosa", date = dateParam, filter = filter)
                     .enqueue(object : Callback<List<AlarmLogResponse>> {
                         override fun onResponse(
                             call: Call<List<AlarmLogResponse>>,

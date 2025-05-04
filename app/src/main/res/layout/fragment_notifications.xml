@@ -11,7 +11,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background" >
+        android:background="@color/background">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar_my"
@@ -24,8 +24,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:paddingVertical="12dp"
-            android:paddingHorizontal="28dp"
-            />
+            android:paddingHorizontal="28dp"/>
 
         <TextView
             android:id="@+id/toolbar_title"
@@ -39,7 +38,7 @@
             app:layout_constraintTop_toTopOf="@+id/toolbar_my"
             app:layout_constraintStart_toStartOf="@+id/toolbar_my"
             app:layout_constraintEnd_toEndOf="@+id/toolbar_my"
-            app:layout_constraintBottom_toBottomOf="@+id/toolbar_my" />
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar_my"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -64,9 +63,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginVertical="22dp"
-            android:layout_marginHorizontal="20dp" >
+            android:layout_marginHorizontal="20dp">
 
-            <com.github.mikephil.charting.charts.LineChart
+            <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/my_chart"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
@@ -77,9 +76,35 @@
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="20dp"
                 android:layout_marginTop="30dp"/>
+
+            <!-- x축 옆에 "월" 추가 -->
+            <TextView
+                android:id="@+id/month_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="월"
+                android:textSize="12sp"
+                android:textColor="#767676"
+                app:layout_constraintTop_toBottomOf="@id/my_chart"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="-14dp"
+                android:layout_marginLeft="16dp"/>
+
+            <!-- y축 옆에 "횟수" 추가 -->
+            <TextView
+                android:id="@+id/count_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-14dp"
+                android:layout_marginEnd="18dp"
+                android:text="횟수"
+                android:textColor="#767676"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/my_chart" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
+        <!-- 스트레칭 영역들 -->
         <FrameLayout
             android:id="@+id/stretch_left"
             android:layout_width="0dp"
@@ -112,8 +137,8 @@
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="24dp"
                 android:layout_marginBottom="25dp"/>
-
         </FrameLayout>
+
         <FrameLayout
             android:id="@+id/stretch_right"
             android:layout_width="0dp"
@@ -146,7 +171,6 @@
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="18dp"
                 android:layout_marginBottom="7dp"/>
-
         </FrameLayout>
 
         <TextView
@@ -160,7 +184,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="100dp" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
