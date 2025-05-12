@@ -26,6 +26,8 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+
 
 class MypageActivity : Fragment() {
 
@@ -44,6 +46,30 @@ class MypageActivity : Fragment() {
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbarMy)
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
         setHasOptionsMenu(true)
+
+        // 현재 로그인한 사용자 ID 가져오기
+        val sharedPref = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val userId = sharedPref.getString("logged_in_userId", null)
+
+        if (userId != null) {
+            val databaseRef = FirebaseDatabase.getInstance().reference
+            databaseRef.child("Users").child(userId).child("username").get()
+                .addOnSuccessListener { dataSnapshot ->
+                    val username = dataSnapshot.value as? String
+                    if (username != null) {
+                        // 올바른 문자열 결합 방식
+                        binding.userNameText.text = username + "님"
+                    } else {
+                        binding.userNameText.text = "사용자"
+                    }
+                }
+                .addOnFailureListener {
+                    binding.userNameText.text = "사용자"
+                }
+
+        } else {
+            binding.userNameText.text = "사용자"
+        }
 
         val chart = binding.myChart as BarChart
         chart.description.isEnabled = false

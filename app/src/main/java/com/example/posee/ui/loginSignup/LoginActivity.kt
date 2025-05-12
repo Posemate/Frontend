@@ -1,5 +1,6 @@
 package com.example.posee.ui.loginSignup
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -8,7 +9,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.example.posee.R
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.example.posee.MainActivity
 
@@ -40,6 +40,13 @@ class LoginActivity : AppCompatActivity() {
                 if (snapshot.exists()) {
                     val storedPassword = snapshot.child("password").value.toString()
                     if (storedPassword == password) {
+                        // 로그인 성공 후 SharedPreferences에 사용자 ID 저장
+                        val sharedPref = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                        with(sharedPref.edit()) {
+                            putString("logged_in_userId", userId)
+                            apply()
+                        }
+
                         Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this, MainActivity::class.java))
                         // 로그인 후 이동할 화면
