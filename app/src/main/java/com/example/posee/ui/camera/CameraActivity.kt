@@ -29,7 +29,13 @@ import java.util.concurrent.Executors
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import com.example.posee.R
+import com.example.posee.network.AlarmLogRequest
+import com.example.posee.network.RetrofitClient
+import retrofit2.Call
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 class CameraActivity : Fragment() {
 
@@ -42,6 +48,9 @@ class CameraActivity : Fragment() {
     private var latestImageProxy: ImageProxy? = null
 
     private val classes = arrayOf("proper posture", "wrong posture", "too close")
+
+    // SharedPreferences에서 읽어온 userId
+    private lateinit var userId: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -64,6 +73,11 @@ class CameraActivity : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setGuideTextStyle()
+
+        // SharedPreferences에서 userId 로드
+        val prefsId = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        userId = prefsId.getString("logged_in_userId", null)
+            ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
 
         // 백그라운드 알림 스위치 상태 확인 후 PoseDetectionService 실행
         val prefs = requireContext().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
@@ -104,6 +118,25 @@ class CameraActivity : Fragment() {
 
                 val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
                 val resultText = classes[maxIdx]
+
+                // POST 요청으로 알람 로그 전송
+                val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                val request = AlarmLogRequest(
+                    userId = userId,
+                    alarmTime = nowIso,
+                    postureType = maxIdx+1
+                )
+                RetrofitClient.apiService().postAlarmLog(request)
+                    .enqueue(object : retrofit2.Callback<Void> {
+                        override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {
+                            // 아무 동작도 하지 않음 (토스트 제거)
+                        }
+
+                        override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
+                            // 실패 로깅만 하고 아무 UI 작업도 하지 않음
+                            Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
+                        }
+                    })
 
                 showResultBubble(resultText)
 

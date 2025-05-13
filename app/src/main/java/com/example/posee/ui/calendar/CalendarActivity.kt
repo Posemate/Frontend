@@ -34,7 +34,9 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 class CalendarActivity : Fragment() {
@@ -42,6 +44,8 @@ class CalendarActivity : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var calendarView: MaterialCalendarView
+
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +56,12 @@ class CalendarActivity : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val calendarViewModel = ViewModelProvider(this).get(CalendarViewModel::class.java)
+
+        // SharedPreferences 에서 userId 읽어오기
+        val sharedPref = requireActivity()
+            .getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        userId = sharedPref.getString("logged_in_userId", null)
+            ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -75,7 +85,7 @@ class CalendarActivity : Fragment() {
         val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_50)
         val eventColor4 = ContextCompat.getColor(requireContext(), R.color.main_90)
 
-        RetrofitClient.apiService().getAlarmCountByDate("dduviosa")
+        RetrofitClient.apiService().getAlarmCountByDate(userId)
             .enqueue(object : Callback<Map<String, Long>> {
                 @RequiresApi(Build.VERSION_CODES.O)
                 override fun onResponse(call: Call<Map<String, Long>>, response: Response<Map<String, Long>>) {
@@ -213,22 +223,33 @@ class CalendarActivity : Fragment() {
                 }
 
                 RetrofitClient.apiService()
-                    .getLogs(userId = "dduviosa", date = dateParam, filter = filter)
+                    .getLogs(userId = userId, date = dateParam, filter = filter)
                     .enqueue(object : Callback<List<AlarmLogResponse>> {
                         override fun onResponse(
                             call: Call<List<AlarmLogResponse>>,
                             response: Response<List<AlarmLogResponse>>
                         ) {
                             if (response.isSuccessful) {
-                                val items = response.body()!!.map { dto ->
+                                val body = response.body() ?: emptyList()
+
+                                // 2. HH:mm 포맷용 Formatter
+                                val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+                                // 3. LocalTime으로 파싱해서 내림차순 정렬
+                                val sortedByRecent = body.sortedByDescending { dto ->
+                                    LocalTime.parse(dto.time, timeFormatter)
+                                }
+
+                                // 4. 정렬된 리스트를 화면에 반영
+                                val items = sortedByRecent.map { dto ->
                                     val resId = when (dto.postureType) {
                                         3 -> R.drawable.ic_eyes
                                         2 -> R.drawable.neck
                                         else -> R.drawable.posee_logo
                                     }
                                     BottomItem(
-                                        imageRes = resId,
-                                        time = dto.time,
+                                        imageRes   = resId,
+                                        time       = dto.time,
                                         explanation = when (dto.postureType) {
                                             3 -> "너무 가까워요!"
                                             2 -> "자세를 조금만 고쳐볼까요!"
@@ -237,7 +258,7 @@ class CalendarActivity : Fragment() {
                                     )
                                 }
                                 adapter.submitList(items)
-                                countTextView.text = items.size.toString() // 알림 횟수 표시
+                                countTextView.text = items.size.toString()
                             } else {
                                 Toast.makeText(requireContext(), "알람 내역 조회 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                             }
