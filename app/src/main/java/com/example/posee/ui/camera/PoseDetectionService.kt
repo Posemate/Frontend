@@ -20,6 +20,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import com.example.posee.R
+import com.example.posee.network.AlarmLogRequest
+import com.example.posee.network.RetrofitClient
 import com.google.common.util.concurrent.ListenableFuture
 import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
@@ -27,6 +29,8 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 class PoseDetectionService : Service() {
@@ -35,11 +39,16 @@ class PoseDetectionService : Service() {
     private lateinit var interpreter: Interpreter
     private val imageSize = 224
     private val executor = Executors.newSingleThreadExecutor()
+    private lateinit var userId: String
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        // SharedPreferences에서 userId 로드
+        val prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        userId = prefs.getString("logged_in_userId", null)
+            ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
         interpreter = Interpreter(loadModelFile("model.tflite"))
         startForegroundWithNotification()
         startCameraAnalysis()
@@ -92,6 +101,29 @@ class PoseDetectionService : Service() {
                 // 조건에 따라 알림 전송
                 if ((result == "wrong posture" && neckOn) || (result == "too close" && eyeOn)) {
                     sendNotification(result)
+
+                    // POST 요청으로 알람 로그 전송
+                    val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                    // result에 따라 postureType 매핑: proper->1, wrong->2, close->3
+                    val postureType = when (result) {
+                        "wrong posture" -> 2
+                        "too close"     -> 3
+                        else             -> 1
+                    }
+                    val request = AlarmLogRequest(
+                        userId      = userId,
+                        alarmTime   = nowIso,
+                        postureType = postureType
+                    )
+                    RetrofitClient.apiService().postAlarmLog(request)
+                        .enqueue(object : retrofit2.Callback<Void> {
+                            override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
+                                // No UI action
+                            }
+                            override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
+                                // Log failure
+                            }
+                        })
                 }
 
                 imageProxy.close()
