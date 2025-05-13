@@ -43,7 +43,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="김하연님의 통계"
+            android:text="님의 통계"
             android:id="@+id/userNameText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
