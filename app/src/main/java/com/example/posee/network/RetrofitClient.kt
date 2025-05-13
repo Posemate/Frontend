@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "http://172.30.1.75:8080/"  // 에뮬레이터용
+    private const val BASE_URL = "http://172.19.70.82:8080/"  // 에뮬레이터용
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()

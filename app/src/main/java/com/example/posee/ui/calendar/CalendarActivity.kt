@@ -2,6 +2,7 @@ package com.example.posee.ui.calendar
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.widget.AdapterView
@@ -9,6 +10,7 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -75,6 +77,7 @@ class CalendarActivity : Fragment() {
 
         RetrofitClient.apiService().getAlarmCountByDate("dduviosa")
             .enqueue(object : Callback<Map<String, Long>> {
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onResponse(call: Call<Map<String, Long>>, response: Response<Map<String, Long>>) {
                     if (response.isSuccessful) {
                         val countMap = response.body() ?: return

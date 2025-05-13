@@ -27,7 +27,8 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MypageActivity : Fragment() {
 
@@ -35,7 +36,7 @@ class MypageActivity : Fragment() {
     private val binding get() = _binding!!
     private val mypageViewModel: MypageViewModel by viewModels()
 
-    private var selectedIndex: Int = -1 // 선택된 막대 index 저장
+    private var selectedIndex: Int = -1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -47,7 +48,6 @@ class MypageActivity : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
         setHasOptionsMenu(true)
 
-        // 현재 로그인한 사용자 ID 가져오기
         val sharedPref = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val userId = sharedPref.getString("logged_in_userId", null)
 
@@ -56,17 +56,14 @@ class MypageActivity : Fragment() {
             databaseRef.child("Users").child(userId).child("username").get()
                 .addOnSuccessListener { dataSnapshot ->
                     val username = dataSnapshot.value as? String
-                    if (username != null) {
-                        // 올바른 문자열 결합 방식
-                        binding.userNameText.text = username + "님"
-                    } else {
-                        binding.userNameText.text = "사용자"
-                    }
+                    binding.userNameText.text = if (username != null) username + "님" else "사용자"
                 }
                 .addOnFailureListener {
                     binding.userNameText.text = "사용자"
                 }
 
+            // 월별 알림 데이터를 서버에서 불러오기
+            mypageViewModel.loadChartData(userId)
         } else {
             binding.userNameText.text = "사용자"
         }
@@ -75,9 +72,19 @@ class MypageActivity : Fragment() {
         chart.description.isEnabled = false
         chart.legend.isEnabled = false
 
+        // ViewModel에서 data를 설정
         mypageViewModel.chartData.observe(viewLifecycleOwner) { entries ->
+            // 1~12월을 기본값 0으로 초기화한 뒤, 실제 값으로 덮어씌움
+            val fullData = (1..12).associateWith { 0 }.toMutableMap()
+            entries.forEach { (key, value) ->
+                val month = key.split("-")[1].toInt()
+                fullData[month] = value
+            }
 
-            val barEntries = entries.map { it.entry }
+            // BarEntry: 1~12월 전체 생성
+            val barEntries = fullData.entries.map {
+                BarEntry(it.key.toFloat(), it.value.toFloat())
+            }
 
             val defaultColor = ContextCompat.getColor(requireContext(), R.color.main)
             val highlightColor = Color.rgb(
@@ -86,7 +93,8 @@ class MypageActivity : Fragment() {
                 (Color.blue(defaultColor) * 0.98).toInt()
             )
 
-            val dataSet = BarDataSet(barEntries, "Stretching").apply {
+            // BarDataSet 생성
+            val dataSet = BarDataSet(barEntries, "AlarmCount").apply {
                 colors = List(barEntries.size) { defaultColor }
                 valueTextColor = ContextCompat.getColor(requireContext(), R.color.black)
                 valueTextSize = 11f
@@ -96,7 +104,7 @@ class MypageActivity : Fragment() {
                         return if (barEntry != null && selectedIndex != -1 &&
                             barEntry.x == barEntries[selectedIndex].x
                         ) {
-                            barEntry.y.toString()
+                            barEntry.y.toInt().toString()
                         } else {
                             ""
                         }
@@ -104,9 +112,14 @@ class MypageActivity : Fragment() {
                 }
             }
 
-            val barData = BarData(dataSet).apply { barWidth = 0.6f }
+            val barData = BarData(dataSet).apply {
+                barWidth = 0.8f
+            }
+
+            val chart = binding.myChart
             chart.data = barData
 
+            // X축 설정
             chart.xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 axisMinimum = 0.5f
@@ -124,26 +137,36 @@ class MypageActivity : Fragment() {
                 setDrawGridLines(false)
             }
 
-            chart.axisLeft.isEnabled = false
+            // Y축 설정
+            chart.axisLeft.apply {
+                isEnabled = false
+                axisMinimum = 0f  // Y축의 최소값을 0으로 강제 설정
+            }
+
             chart.axisRight.apply {
                 isEnabled = true
                 axisMinimum = 0f
-                axisMaximum = 6f
                 granularity = 1f
                 setLabelCount(4, true)
                 textSize = 11f
                 textColor = ContextCompat.getColor(requireContext(), R.color.dark_gray)
             }
 
+            // 바차트 클릭 이벤트 처리
             chart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
                 override fun onValueSelected(e: Entry?, h: Highlight?) {
                     e?.let {
-                        val index = barEntries.indexOfFirst { it.x == e.x }
+                        val epsilon = 0.001f
+                        val index = barEntries.indexOfFirst { entry ->
+                            kotlin.math.abs(entry.x - e.x) < epsilon
+                        }
                         if (index != -1) {
                             selectedIndex = index
-                            dataSet.colors = List(barEntries.size) { defaultColor }.toMutableList().apply {
-                                this[index] = highlightColor
-                            }
+
+                            val updatedColors = MutableList(barEntries.size) { defaultColor }
+                            updatedColors[index] = highlightColor
+
+                            dataSet.colors = updatedColors
                             chart.invalidate()
                         }
                     }
@@ -156,8 +179,11 @@ class MypageActivity : Fragment() {
                 }
             })
 
+            chart.description.isEnabled = false
+            chart.legend.isEnabled = false
             chart.invalidate()
         }
+
 
         binding.stretchLeft.setOnClickListener {
             startActivity(Intent(requireContext(), StretchingActivity::class.java))
@@ -183,7 +209,6 @@ class MypageActivity : Fragment() {
                 .show()
         }
 
-        /** Drawer 및 스위치 설정 **/
         val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout_my)
         requireActivity().findViewById<View>(R.id.btn_close_drawer)?.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.END)
