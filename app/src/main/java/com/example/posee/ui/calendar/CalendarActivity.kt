@@ -43,6 +43,8 @@ class CalendarActivity : Fragment() {
     private val binding get() = _binding!!
     private lateinit var calendarView: MaterialCalendarView
 
+    private lateinit var userId: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -52,6 +54,12 @@ class CalendarActivity : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val calendarViewModel = ViewModelProvider(this).get(CalendarViewModel::class.java)
+
+        // SharedPreferences 에서 userId 읽어오기
+        val sharedPref = requireActivity()
+            .getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        userId = sharedPref.getString("logged_in_userId", null)
+            ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -75,7 +83,7 @@ class CalendarActivity : Fragment() {
         val eventColor3 = ContextCompat.getColor(requireContext(), R.color.main_50)
         val eventColor4 = ContextCompat.getColor(requireContext(), R.color.main_90)
 
-        RetrofitClient.apiService().getAlarmCountByDate("hhh")
+        RetrofitClient.apiService().getAlarmCountByDate(userId)
             .enqueue(object : Callback<Map<String, Long>> {
                 @RequiresApi(Build.VERSION_CODES.O)
                 override fun onResponse(call: Call<Map<String, Long>>, response: Response<Map<String, Long>>) {
@@ -213,7 +221,7 @@ class CalendarActivity : Fragment() {
                 }
 
                 RetrofitClient.apiService()
-                    .getLogs(userId = "hhh", date = dateParam, filter = filter)
+                    .getLogs(userId = userId, date = dateParam, filter = filter)
                     .enqueue(object : Callback<List<AlarmLogResponse>> {
                         override fun onResponse(
                             call: Call<List<AlarmLogResponse>>,

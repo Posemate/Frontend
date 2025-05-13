@@ -30,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
             val userId = etLoginId.text.toString().trim()
             val password = etLoginPassword.text.toString().trim()
 
+            Toast.makeText(this, "클릭", Toast.LENGTH_SHORT).show()
+
             if (userId.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "아이디와 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
