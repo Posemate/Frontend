@@ -34,7 +34,9 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 class CalendarActivity : Fragment() {
@@ -228,15 +230,26 @@ class CalendarActivity : Fragment() {
                             response: Response<List<AlarmLogResponse>>
                         ) {
                             if (response.isSuccessful) {
-                                val items = response.body()!!.map { dto ->
+                                val body = response.body() ?: emptyList()
+
+                                // 2. HH:mm 포맷용 Formatter
+                                val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+                                // 3. LocalTime으로 파싱해서 내림차순 정렬
+                                val sortedByRecent = body.sortedByDescending { dto ->
+                                    LocalTime.parse(dto.time, timeFormatter)
+                                }
+
+                                // 4. 정렬된 리스트를 화면에 반영
+                                val items = sortedByRecent.map { dto ->
                                     val resId = when (dto.postureType) {
                                         3 -> R.drawable.ic_eyes
                                         2 -> R.drawable.neck
                                         else -> R.drawable.posee_logo
                                     }
                                     BottomItem(
-                                        imageRes = resId,
-                                        time = dto.time,
+                                        imageRes   = resId,
+                                        time       = dto.time,
                                         explanation = when (dto.postureType) {
                                             3 -> "너무 가까워요!"
                                             2 -> "자세를 조금만 고쳐볼까요!"
@@ -245,7 +258,7 @@ class CalendarActivity : Fragment() {
                                     )
                                 }
                                 adapter.submitList(items)
-                                countTextView.text = items.size.toString() // 알림 횟수 표시
+                                countTextView.text = items.size.toString()
                             } else {
                                 Toast.makeText(requireContext(), "알람 내역 조회 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                             }
