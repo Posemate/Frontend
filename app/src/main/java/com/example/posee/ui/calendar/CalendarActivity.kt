@@ -235,7 +235,7 @@ class CalendarActivity : Fragment() {
                                 // 2. HH:mm 포맷용 Formatter
                                 val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-                                // 3. LocalTime으로 파싱해서 내림차순 정렬
+                                // 3. dto.time을 LocalTime.parse()로 파싱해서 KST 보정
                                 val sortedByRecent = body.sortedByDescending { dto ->
                                     LocalTime.parse(dto.time, timeFormatter)
                                 }
