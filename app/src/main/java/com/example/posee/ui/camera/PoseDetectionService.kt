@@ -20,8 +20,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import com.example.posee.R
-import com.example.posee.network.AlarmLogRequest
-import com.example.posee.network.RetrofitClient
 import com.google.common.util.concurrent.ListenableFuture
 import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
@@ -102,28 +100,8 @@ class PoseDetectionService : Service() {
                 if ((result == "wrong posture" && neckOn) || (result == "too close" && eyeOn)) {
                     sendNotification(result)
 
-                    // POST 요청으로 알람 로그 전송
-                    val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                    // result에 따라 postureType 매핑: proper->1, wrong->2, close->3
-                    val postureType = when (result) {
-                        "wrong posture" -> 2
-                        "too close"     -> 3
-                        else             -> 1
-                    }
-                    val request = AlarmLogRequest(
-                        userId      = userId,
-                        alarmTime   = nowIso,
-                        postureType = postureType
-                    )
-                    RetrofitClient.apiService().postAlarmLog(request)
-                        .enqueue(object : retrofit2.Callback<Void> {
-                            override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
-                                // No UI action
-                            }
-                            override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
-                                // Log failure
-                            }
-                        })
+                    //  백그라운드에서는 로그 저장하지 않음
+                    // 로그는 CameraActivity 버튼 클릭 시에만 저장됨
                 }
 
                 imageProxy.close()
@@ -149,7 +127,8 @@ class PoseDetectionService : Service() {
             .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
                 NotificationManagerCompat.from(this).notify(2, notification)
             }
         } else {
