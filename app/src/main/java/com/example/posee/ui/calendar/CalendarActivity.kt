@@ -109,10 +109,10 @@ class CalendarActivity : Fragment() {
                             }
                         }
 
-                        calendarView.addDecorator(CalendarDecorator(eventColor1, group1))
-                        calendarView.addDecorator(CalendarDecorator(eventColor2, group2))
-                        calendarView.addDecorator(CalendarDecorator(eventColor3, group3))
-                        calendarView.addDecorator(CalendarDecorator(eventColor4, group4))
+                        calendarView.addDecorator(CalendarDecorator(requireContext(), eventColor1, group1))
+                        calendarView.addDecorator(CalendarDecorator(requireContext(), eventColor2, group2))
+                        calendarView.addDecorator(CalendarDecorator(requireContext(), eventColor3, group3))
+                        calendarView.addDecorator(CalendarDecorator(requireContext(), eventColor4, group4))
 
                         calendarView.invalidateDecorators()
                     }
