@@ -48,8 +48,6 @@ class CameraActivity : Fragment() {
     private var latestImageProxy: ImageProxy? = null
 
     private val classes = arrayOf("proper posture", "wrong posture", "too close")
-
-    // SharedPreferences에서 읽어온 userId
     private lateinit var userId: String
 
     override fun onCreateView(
@@ -74,12 +72,10 @@ class CameraActivity : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setGuideTextStyle()
 
-        // SharedPreferences에서 userId 로드
         val prefsId = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         userId = prefsId.getString("logged_in_userId", null)
             ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
 
-        // 백그라운드 알림 스위치 상태 확인 후 PoseDetectionService 실행
         val prefs = requireContext().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
         val backgroundEnabled = prefs.getBoolean("background_switch_state", false)
 
@@ -88,7 +84,6 @@ class CameraActivity : Fragment() {
             ContextCompat.startForegroundService(requireContext(), intent)
         }
 
-        // 카메라 퍼미션 체크
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -110,38 +105,40 @@ class CameraActivity : Fragment() {
 
         binding.btnAnalyze.setOnClickListener {
             latestImageProxy?.let { imageProxy ->
+                // 최신 프레임을 즉시 bitmap으로 변환
                 val bitmap = imageProxyToBitmap(imageProxy)
-                val input = preprocess(bitmap)
+                // 프레임 닫고 null 처리 (중복 분석 방지)
+                imageProxy.close()
+                latestImageProxy = null
 
+                val input = preprocess(bitmap)
                 val output = Array(1) { FloatArray(3) }
                 interpreter.run(input, output)
 
+                val maxProb = output[0].maxOrNull() ?: 0f
                 val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
-                val resultText = classes[maxIdx]
 
-                // POST 요청으로 알람 로그 전송
-                val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                val request = AlarmLogRequest(
-                    userId = userId,
-                    alarmTime = nowIso,
-                    postureType = maxIdx+1
-                )
-                RetrofitClient.apiService().postAlarmLog(request)
-                    .enqueue(object : retrofit2.Callback<Void> {
-                        override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {
-                            // 아무 동작도 하지 않음 (토스트 제거)
-                        }
+                if (maxProb > 0.6f) {
+                    val resultText = classes[maxIdx]
 
-                        override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
-                            // 실패 로깅만 하고 아무 UI 작업도 하지 않음
-                            Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
-                        }
-                    })
+                    val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                    val request = AlarmLogRequest(
+                        userId = userId,
+                        alarmTime = nowIso,
+                        postureType = maxIdx + 1
+                    )
+                    RetrofitClient.apiService().postAlarmLog(request)
+                        .enqueue(object : retrofit2.Callback<Void> {
+                            override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {}
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
+                            }
+                        })
 
-                showResultBubble(resultText)
-
-                imageProxy.close()
-                latestImageProxy = null
+                    showResultBubble(resultText)
+                } else {
+                    Log.d("Posee", "불확실한 결과이므로 알림 생략: ${output[0].joinToString()}")
+                }
             } ?: run {
                 Toast.makeText(requireContext(), "카메라 프레임을 가져오는 중입니다.", Toast.LENGTH_SHORT).show()
             }
@@ -190,7 +187,15 @@ class CameraActivity : Fragment() {
         val out = ByteArrayOutputStream()
         yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 90, out)
         val yuvByteArray = out.toByteArray()
-        return BitmapFactory.decodeByteArray(yuvByteArray, 0, yuvByteArray.size)
+
+        val bitmap = BitmapFactory.decodeByteArray(yuvByteArray, 0, yuvByteArray.size)
+
+        val matrix = Matrix().apply {
+            postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
+            postScale(-1f, 1f) // 전면 카메라 좌우 반전
+        }
+
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
     private fun preprocess(bitmap: Bitmap): ByteBuffer {
