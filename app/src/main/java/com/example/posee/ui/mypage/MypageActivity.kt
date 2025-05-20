@@ -56,7 +56,7 @@ class MypageActivity : Fragment() {
             databaseRef.child("Users").child(userId).child("username").get()
                 .addOnSuccessListener { dataSnapshot ->
                     val username = dataSnapshot.value as? String
-                    binding.userNameText.text = if (username != null) username + "님의 통계" else "사용자"
+                    binding.userNameText.text = if (username != null) username + "님" else "사용자"
                 }
                 .addOnFailureListener {
                     binding.userNameText.text = "사용자"

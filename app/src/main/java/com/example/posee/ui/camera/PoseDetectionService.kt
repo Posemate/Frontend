@@ -27,8 +27,6 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 class PoseDetectionService : Service() {
@@ -38,48 +36,96 @@ class PoseDetectionService : Service() {
     private val imageSize = 224
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var userId: String
+    private var lastNotificationTime = 0L
+
+    // DummyLifecycle를 멤버 변수로 만들어서 서비스 종료 시 바인딩 해제 가능하도록
+    private val lifecycleOwner = DummyLifecycle()
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var analyzer: ImageAnalysis? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        // SharedPreferences에서 userId 로드
-        val prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("user_prefs", MODE_PRIVATE)
         userId = prefs.getString("logged_in_userId", null)
             ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
         interpreter = Interpreter(loadModelFile("model.tflite"))
-        startForegroundWithNotification()
         startCameraAnalysis()
     }
 
-    private fun startForegroundWithNotification() {
-        val channelId = "pose_channel"
-        val channelName = "Pose Detection Service"
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 서비스가 강제 종료되어도 자동 재시작 하지 않도록
+        return START_NOT_STICKY
+    }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // 알림 제거 및 포그라운드 서비스 종료
+        stopForeground(true)
+        // 카메라 바인딩 해제
+        cameraProvider?.unbindAll()
+        executor.shutdown()
+    }
+
+    private fun shouldNotify(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        return if (currentTime - lastNotificationTime > 10000) { // 10초 간격 제한
+            lastNotificationTime = currentTime
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun startForegroundWithNotification(message: String) {
+        val intent = Intent(this, AlertActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val channelId = "pose_popup_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(
+                channelId,
+                "자세 팝업 알림",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Posee 자세 분석 중")
-            .setContentText("앱이 백그라운드에서도 실행 중입니다.")
+            .setContentTitle("자세 알림")
+            .setContentText(message)
             .setSmallIcon(R.drawable.ic_notification)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setAutoCancel(true)
             .build()
 
-        startForeground(1, notification)
+        val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        ) {
+            NotificationManagerCompat.from(this).notify(notificationId, notification)
+            startForeground(notificationId, notification)
+        }
     }
 
     private fun startCameraAnalysis() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            val analyzer = ImageAnalysis.Builder()
+            cameraProvider = cameraProviderFuture.get()
+            analyzer = ImageAnalysis.Builder()
                 .setTargetResolution(Size(imageSize, imageSize))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
-            analyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+            analyzer?.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
                 val bitmap = imageProxyToBitmap(imageProxy)
                 val input = preprocess(bitmap)
                 val output = Array(1) { FloatArray(3) }
@@ -91,49 +137,27 @@ class PoseDetectionService : Service() {
                     else -> null
                 }
 
-                // SharedPreferences에서 알림 설정 상태 불러오기
                 val prefs = getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
                 val neckOn = prefs.getBoolean("neck_switch_state", false)
                 val eyeOn = prefs.getBoolean("eye_switch_state", false)
 
-                // 조건에 따라 알림 전송
                 if ((result == "wrong posture" && neckOn) || (result == "too close" && eyeOn)) {
-                    sendNotification(result)
-
-                    //  백그라운드에서는 로그 저장하지 않음
-                    // 로그는 CameraActivity 버튼 클릭 시에만 저장됨
+                    if (shouldNotify()) {
+                        val message = when (result) {
+                            "wrong posture" -> "자세가 좋지 않아요!"
+                            "too close" -> "너무 가까워요!"
+                            else -> return@Analyzer
+                        }
+                        startForegroundWithNotification(message)
+                    }
                 }
 
                 imageProxy.close()
             })
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            cameraProvider.bindToLifecycle(DummyLifecycle(), cameraSelector, analyzer)
+            cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, analyzer)
         }, ContextCompat.getMainExecutor(this))
-    }
-
-    private fun sendNotification(result: String) {
-        val message = when (result) {
-            "wrong posture" -> "자세가 좋지 않아요!"
-            "too close" -> "너무 가까워요!"
-            else -> return
-        }
-
-        val notification = NotificationCompat.Builder(this, "pose_channel")
-            .setContentTitle("자세 알림")
-            .setContentText(message)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_GRANTED) {
-                NotificationManagerCompat.from(this).notify(2, notification)
-            }
-        } else {
-            NotificationManagerCompat.from(this).notify(2, notification)
-        }
     }
 
     private fun loadModelFile(modelName: String): ByteBuffer {

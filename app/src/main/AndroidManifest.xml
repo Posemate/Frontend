@@ -38,6 +38,13 @@
         <activity
             android:name=".ui.loginSignup.SignUpActivity"
             android:exported="false" />
+        <activity android:name=".ui.camera.AlertActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"/>
         <activity
             android:name=".ui.loginSignup.LoginActivity"
             android:exported="true">
