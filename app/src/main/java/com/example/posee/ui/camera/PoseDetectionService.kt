@@ -97,9 +97,9 @@ class PoseDetectionService : Service() {
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("자세 알림")
+            .setContentTitle("Posee")
             .setContentText(message)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.logo_popup)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setFullScreenIntent(fullScreenPendingIntent, true)
