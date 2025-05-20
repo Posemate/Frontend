@@ -1,5 +1,6 @@
 package com.example.posee.ui.stretching
 
+import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
@@ -9,10 +10,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.posee.R
 import com.example.posee.databinding.ActivityStretchingBinding
+import com.google.firebase.database.FirebaseDatabase
+import androidx.activity.viewModels
+import com.example.posee.ui.mypage.MypageViewModel
+
 
 class StretchingActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStretchingBinding
+    private val mypageViewModel: MypageViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +31,26 @@ class StretchingActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+        val userId = sharedPref.getString("logged_in_userId", null)
+
+        if (userId != null) {
+            val databaseRef = FirebaseDatabase.getInstance().reference
+            databaseRef.child("Users").child(userId).child("username").get()
+                .addOnSuccessListener { dataSnapshot ->
+                    val username = dataSnapshot.value as? String
+                    binding.neckTitle.text = if (username != null) username + "님을 위한 목·어깨 스트레칭 추천" else "목·어깨 스트레칭"
+                }
+                .addOnFailureListener {
+                    binding.neckTitle.text = "목·어깨 스트레칭"
+                }
+
+            // 월별 알림 데이터를 서버에서 불러오기
+            mypageViewModel.loadChartData(userId)
+        } else {
+            binding.neckTitle.text = "목·어깨 스트레칭"
         }
 
         // toolbar

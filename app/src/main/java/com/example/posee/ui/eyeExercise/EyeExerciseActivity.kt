@@ -3,19 +3,23 @@ package com.example.posee.ui.eyeExercise
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.posee.R
 import com.example.posee.databinding.ActivityEyeExerciseBinding
-import com.example.posee.databinding.ActivityStretchingBinding
 import com.example.posee.ui.stretching.Adapter
 import com.example.posee.ui.stretching.Item
+import androidx.activity.viewModels
+import com.example.posee.ui.mypage.MypageViewModel
+import com.google.firebase.database.FirebaseDatabase
 
 class EyeExerciseActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEyeExerciseBinding
+    private val mypageViewModel: MypageViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +33,26 @@ class EyeExerciseActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        val sharedPref = getSharedPreferences("user_prefs", MODE_PRIVATE)
+        val userId = sharedPref.getString("logged_in_userId", null)
+
+        if (userId != null) {
+            val databaseRef = FirebaseDatabase.getInstance().reference
+            databaseRef.child("Users").child(userId).child("username").get()
+                .addOnSuccessListener { dataSnapshot ->
+                    val username = dataSnapshot.value as? String
+                    binding.eyeTitle.text = if (username != null) username + "님을 위한 눈 운동 추천" else "눈 운동"
+                }
+                .addOnFailureListener {
+                    binding.eyeTitle.text = "눈 운동"
+                }
+
+            // 월별 알림 데이터를 서버에서 불러오기
+            mypageViewModel.loadChartData(userId)
+        } else {
+            binding.eyeTitle.text = "눈 운동"
         }
 
         // toolbar
