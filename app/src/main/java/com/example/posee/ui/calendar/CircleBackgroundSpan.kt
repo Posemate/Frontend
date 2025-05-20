@@ -21,25 +21,27 @@ class CircleBackgroundSpan(
         left: Int, right: Int, top: Int, baseline: Int, bottom: Int,
         text: CharSequence, start: Int, end: Int, lineNum: Int
     ) {
-        // (1) 색상 교체
         val oldColor = paint.color
         paint.color = backgroundColor
+        paint.isAntiAlias = true
 
-        // (2) 텍스트 너비 기준 반지름 후보
-        val textWidth = paint.measureText(text, start, end)
-        val candidateRadius = textWidth / 2f + radiusPaddingPx
+        val centerX = (left + right) / 2f
+        val centerY = (top + bottom) / 2f
 
-        // (3) dp → px로 변환된 최소 반지름과 비교
-        val radius = maxOf(candidateRadius, minimumRadiusPx)
+        val cellWidth = right - left
+        val cellHeight = bottom - top
 
-        // (4) 셀 중앙 계산
-        val cx = (left + right) / 2f
-        val cy = (top + bottom) / 2f
+        // 원 크기 수동 조절
+        val radius = (minOf(cellWidth, cellHeight) / 2f) * 2.5f
 
-        // (5) 원 그리기
-        canvas.drawCircle(cx, cy, radius, paint)
+        val ovalRect = android.graphics.RectF(
+            centerX - radius,
+            centerY - radius,
+            centerX + radius,
+            centerY + radius
+        )
+        canvas.drawOval(ovalRect, paint)
 
-        // (6) 색상 복원
         paint.color = oldColor
     }
 }
