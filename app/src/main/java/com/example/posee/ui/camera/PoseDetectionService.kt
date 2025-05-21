@@ -28,6 +28,13 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.util.concurrent.Executors
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import com.example.posee.network.AlarmLogRequest
+import com.example.posee.network.RetrofitClient
+import retrofit2.Call
+import android.util.Log
+
 
 class PoseDetectionService : Service() {
 
@@ -159,6 +166,24 @@ class PoseDetectionService : Service() {
                             else -> return@Analyzer
                         }
                         startForegroundWithNotification(message)
+
+                        val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                        val postureType = when (result) {
+                            "wrong posture" -> 2
+                            "too close"     -> 3
+                            else            -> 1
+                        }
+                        RetrofitClient
+                            .apiService()
+                            .postAlarmLog( AlarmLogRequest(userId, nowIso, postureType) )
+                            .enqueue(object : retrofit2.Callback<Void> {
+                                override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {
+                                    // 성공 시 별도 처리 없음
+                                }
+                                override fun onFailure(call: Call<Void>, t: Throwable) {
+                                    Log.e("PoseDetectionService", "AlarmLog POST failed: ${t.message}")
+                                }
+                            })
                     }
                 }
 
