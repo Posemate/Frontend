@@ -53,14 +53,14 @@ dependencies {
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.metadata)
 
-    // 👇 추가된 부분 (CameraX)
+    // 추가된 부분 (CameraX)
     implementation("androidx.camera:camera-core:1.3.0")
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
     implementation("androidx.camera:camera-extensions:1.3.0")
 
-    // 👇 선택 사항 (TFLite interpreter 명시)
+    // 선택 사항 (TFLite interpreter 명시)
     implementation("org.tensorflow:tensorflow-lite:2.13.0")
 
     // 기타
@@ -74,6 +74,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
+    // ThreeTenABP (java.time 백포트)
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
 
     implementation(libs.androidx.activity)
     implementation(libs.firebase.auth)

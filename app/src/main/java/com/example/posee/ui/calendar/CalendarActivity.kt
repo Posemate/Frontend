@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.AdapterView
 import android.widget.Spinner
@@ -34,17 +35,15 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import org.threeten.bp.LocalDate
+import org.threeten.bp.LocalTime
+import org.threeten.bp.format.DateTimeFormatter
 
 class CalendarActivity : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var calendarView: MaterialCalendarView
-
     private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,9 +56,7 @@ class CalendarActivity : Fragment() {
     ): View {
         val calendarViewModel = ViewModelProvider(this).get(CalendarViewModel::class.java)
 
-        // SharedPreferences 에서 userId 읽어오기
-        val sharedPref = requireActivity()
-            .getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val sharedPref = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         userId = sharedPref.getString("logged_in_userId", null)
             ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
 
@@ -73,9 +70,8 @@ class CalendarActivity : Fragment() {
 
         calendarView = binding.root.findViewById(R.id.calendar_view)
 
-        calendarView.setOnDateChangedListener(OnDateSelectedListener { widget, date, selected ->
-            val formattedDate = "${date.year}년 ${date.month}월 ${date.day}일"
-            showBottomSheet(formattedDate)
+        calendarView.setOnDateChangedListener(OnDateSelectedListener { _, date, _ ->
+            showBottomSheet(date.date)
         })
 
         calendarView.selectedDate = CalendarDay.today()
@@ -101,6 +97,9 @@ class CalendarActivity : Fragment() {
                             if (count < 5) continue
                             val localDate = LocalDate.parse(dateStr, formatter)
                             val calendarDay = CalendarDay.from(localDate.year, localDate.monthValue, localDate.dayOfMonth)
+
+                            Log.d("디버깅", "dateStr=$dateStr → localDate=$localDate → calendarDay=${calendarDay.year}-${calendarDay.month}-${calendarDay.day}")
+
                             when (count) {
                                 in 0..9 -> group1.add(calendarDay)
                                 in 10..19 -> group2.add(calendarDay)
@@ -126,83 +125,9 @@ class CalendarActivity : Fragment() {
         return root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        view.post {
-            val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
-            val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
-
-            closeButton?.setOnClickListener {
-                drawerLayout.closeDrawer(GravityCompat.END)
-            } ?: run {
-                Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-            }
-
-            val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
-            val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
-            val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
-            val switchBackground = requireActivity().findViewById<Switch>(R.id.switch_background)
-
-            if (switchEye == null || switchNeck == null || switchOverlay == null || switchBackground == null) {
-                Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
-                return@post
-            }
-
-            switchEye.isChecked = loadSwitchState("eye_switch_state")
-            switchNeck.isChecked = loadSwitchState("neck_switch_state")
-            switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
-            switchBackground.isChecked = loadSwitchState("background_switch_state")
-
-            switchEye.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("eye_switch_state", isChecked)
-            }
-
-            switchNeck.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("neck_switch_state", isChecked)
-            }
-
-            switchOverlay.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("overlay_switch_state", isChecked)
-            }
-
-            switchBackground.setOnCheckedChangeListener { _, isChecked ->
-                saveSwitchState("background_switch_state", isChecked)
-
-                val serviceIntent = Intent(requireContext(), PoseDetectionService::class.java)
-                if (isChecked) {
-                    ContextCompat.startForegroundService(requireContext(), serviceIntent)
-                } else {
-                    requireContext().stopService(serviceIntent)
-                }
-            }
-        }
-    }
-
-    private fun saveSwitchState(key: String, isChecked: Boolean) {
-        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putBoolean(key, isChecked)
-            apply()
-        }
-    }
-
-    private fun loadSwitchState(key: String): Boolean {
-        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
-        return sharedPref.getBoolean(key, false)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun showBottomSheet(dateString: String) {
-        val parts = dateString.replace("년", "-").replace("월", "-").replace("일", "").split("-").map { it.trim() }
-        val yyyy = parts[0]
-        val mm = parts[1].padStart(2, '0')
-        val dd = parts[2].padStart(2, '0')
-        val dateParam = "$yyyy-$mm-$dd"
+    private fun showBottomSheet(selectedDate: LocalDate) {
+        val dateParam = selectedDate.format(DateTimeFormatter.ISO_DATE)
+        val dateString = "${selectedDate.year}년 ${selectedDate.monthValue}월 ${selectedDate.dayOfMonth}일"
 
         val bottomSheetView = layoutInflater.inflate(R.layout.activity_bottom_sheet, null)
         val dateTextView = bottomSheetView.findViewById<TextView>(R.id.calendar_date)
@@ -225,22 +150,15 @@ class CalendarActivity : Fragment() {
                 RetrofitClient.apiService()
                     .getLogs(userId = userId, date = dateParam, filter = filter)
                     .enqueue(object : Callback<List<AlarmLogResponse>> {
-                        override fun onResponse(
-                            call: Call<List<AlarmLogResponse>>,
-                            response: Response<List<AlarmLogResponse>>
-                        ) {
+                        override fun onResponse(call: Call<List<AlarmLogResponse>>, response: Response<List<AlarmLogResponse>>) {
                             if (response.isSuccessful) {
                                 val body = response.body() ?: emptyList()
 
-                                // 2. HH:mm 포맷용 Formatter
                                 val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-                                // 3. dto.time을 LocalTime.parse()로 파싱해서 KST 보정
                                 val sortedByRecent = body.sortedByDescending { dto ->
                                     LocalTime.parse(dto.time, timeFormatter)
                                 }
 
-                                // 4. 정렬된 리스트를 화면에 반영
                                 val items = sortedByRecent.map { dto ->
                                     val resId = when (dto.postureType) {
                                         3 -> R.drawable.ic_eyes
@@ -248,8 +166,8 @@ class CalendarActivity : Fragment() {
                                         else -> R.drawable.posee_logo
                                     }
                                     BottomItem(
-                                        imageRes   = resId,
-                                        time       = dto.time,
+                                        imageRes = resId,
+                                        time = dto.time,
                                         explanation = when (dto.postureType) {
                                             3 -> "너무 가까워요!"
                                             2 -> "자세를 조금만 고쳐볼까요!"
@@ -289,6 +207,7 @@ class CalendarActivity : Fragment() {
             behavior.peekHeight = halfScreenHeight
             behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
         }
+
         spinner.setSelection(0)
     }
 
