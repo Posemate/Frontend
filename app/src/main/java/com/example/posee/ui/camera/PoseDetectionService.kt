@@ -38,7 +38,6 @@ class PoseDetectionService : Service() {
     private lateinit var userId: String
     private var lastNotificationTime = 0L
 
-    // DummyLifecycle를 멤버 변수로 만들어서 서비스 종료 시 바인딩 해제 가능하도록
     private val lifecycleOwner = DummyLifecycle()
     private var cameraProvider: ProcessCameraProvider? = null
     private var analyzer: ImageAnalysis? = null
@@ -47,30 +46,40 @@ class PoseDetectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
         val prefs = getSharedPreferences("user_prefs", MODE_PRIVATE)
         userId = prefs.getString("logged_in_userId", null)
             ?: throw IllegalStateException("로그인된 사용자 ID가 없습니다.")
+
         interpreter = Interpreter(loadModelFile("model.tflite"))
-        startCameraAnalysis()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 서비스가 강제 종료되어도 자동 재시작 하지 않도록
+        // 1. 알림 표시 (5초 내 필수)
+        startForegroundWithNotification("자세 분석 중입니다.")
+
+        // 2. 권한 확인 후 카메라 분석 시작
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            startCameraAnalysis()
+        } else {
+            stopSelf() // 권한 없으면 서비스 중단
+        }
+
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // 알림 제거 및 포그라운드 서비스 종료
         stopForeground(true)
-        // 카메라 바인딩 해제
         cameraProvider?.unbindAll()
         executor.shutdown()
     }
 
     private fun shouldNotify(): Boolean {
         val currentTime = System.currentTimeMillis()
-        return if (currentTime - lastNotificationTime > 10000) { // 10초 간격 제한
+        return if (currentTime - lastNotificationTime > 10000) {
             lastNotificationTime = currentTime
             true
         } else {
@@ -79,20 +88,21 @@ class PoseDetectionService : Service() {
     }
 
     private fun startForegroundWithNotification(message: String) {
-        val intent = Intent(this, AlertActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val intent = Intent(this, AlertActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         val fullScreenPendingIntent = PendingIntent.getActivity(
-            this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val channelId = "pose_popup_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
-                "자세 팝업 알림",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                channelId, "자세 팝업 알림", NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
