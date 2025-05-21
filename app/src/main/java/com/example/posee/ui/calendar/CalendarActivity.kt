@@ -135,7 +135,7 @@ class CalendarActivity : Fragment() {
             closeButton?.setOnClickListener {
                 drawerLayout.closeDrawer(GravityCompat.END)
             } ?: run {
-                Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "close button을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
             }
 
             val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
