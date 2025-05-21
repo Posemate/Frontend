@@ -101,9 +101,9 @@ class CalendarActivity : Fragment() {
                             Log.d("디버깅", "dateStr=$dateStr → localDate=$localDate → calendarDay=${calendarDay.year}-${calendarDay.month}-${calendarDay.day}")
 
                             when (count) {
-                                in 0..9 -> group1.add(calendarDay)
-                                in 10..19 -> group2.add(calendarDay)
-                                in 20..29 -> group3.add(calendarDay)
+                                in 1..20 -> group1.add(calendarDay)
+                                in 21..40 -> group2.add(calendarDay)
+                                in 41..60 -> group3.add(calendarDay)
                                 else -> group4.add(calendarDay)
                             }
                         }
@@ -123,6 +123,77 @@ class CalendarActivity : Fragment() {
             })
 
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        view.post {
+            val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+            val closeButton = requireActivity().findViewById<View>(R.id.btn_close_drawer)
+
+            closeButton?.setOnClickListener {
+                drawerLayout.closeDrawer(GravityCompat.END)
+            } ?: run {
+                Toast.makeText(requireContext(), "closeButton을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+
+            val switchEye = requireActivity().findViewById<Switch>(R.id.switch_eye)
+            val switchNeck = requireActivity().findViewById<Switch>(R.id.switch_neck)
+            val switchOverlay = requireActivity().findViewById<Switch>(R.id.switch_overlay)
+            val switchBackground = requireActivity().findViewById<Switch>(R.id.switch_background)
+
+            if (switchEye == null || switchNeck == null || switchOverlay == null || switchBackground == null) {
+                Toast.makeText(requireContext(), "스위치가 Activity 레이아웃에 존재하지 않습니다.", Toast.LENGTH_LONG).show()
+                return@post
+            }
+
+            switchEye.isChecked = loadSwitchState("eye_switch_state")
+            switchNeck.isChecked = loadSwitchState("neck_switch_state")
+            switchOverlay.isChecked = loadSwitchState("overlay_switch_state")
+            switchBackground.isChecked = loadSwitchState("background_switch_state")
+
+            switchEye.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("eye_switch_state", isChecked)
+            }
+
+            switchNeck.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("neck_switch_state", isChecked)
+            }
+
+            switchOverlay.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("overlay_switch_state", isChecked)
+            }
+
+            switchBackground.setOnCheckedChangeListener { _, isChecked ->
+                saveSwitchState("background_switch_state", isChecked)
+
+                val serviceIntent = Intent(requireContext(), PoseDetectionService::class.java)
+                if (isChecked) {
+                    ContextCompat.startForegroundService(requireContext(), serviceIntent)
+                } else {
+                    requireContext().stopService(serviceIntent)
+                }
+            }
+        }
+    }
+
+    private fun saveSwitchState(key: String, isChecked: Boolean) {
+        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean(key, isChecked)
+            apply()
+        }
+    }
+
+    private fun loadSwitchState(key: String): Boolean {
+        val sharedPref = requireActivity().getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(key, false)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun showBottomSheet(selectedDate: LocalDate) {
