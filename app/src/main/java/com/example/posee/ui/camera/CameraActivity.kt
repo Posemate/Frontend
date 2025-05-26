@@ -45,27 +45,17 @@ class CameraActivity : Fragment() {
 
     private val imageSize = 224
     private val executor = Executors.newSingleThreadExecutor()
-    private var latestImageProxy: ImageProxy? = null
-
-    private val classes = arrayOf("proper posture", "wrong posture", "too close")
     private lateinit var userId: String
+    private val classes = arrayOf("proper posture", "wrong posture", "too close")
+
+    private lateinit var preview: Preview
+    private lateinit var defaultAnalyzer: ImageAnalysis
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         return binding.root
-    }
-
-    private fun setGuideTextStyle() {
-        val text = "버튼을 누르어\n올바른 자세인지 아니지를\n확인할 수 있어요"
-        val spannable = SpannableString(text)
-
-        val purple = ContextCompat.getColor(requireContext(), R.color.purple_500)
-        spannable.setSpan(ForegroundColorSpan(purple), 0, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spannable.setSpan(ForegroundColorSpan(purple), 7, 17, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-        binding.guideText.text = spannable
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -104,45 +94,78 @@ class CameraActivity : Fragment() {
         }
 
         binding.btnAnalyze.setOnClickListener {
-            latestImageProxy?.let { imageProxy ->
-                // 최신 프레임을 즉시 bitmap으로 변환
-                val bitmap = imageProxyToBitmap(imageProxy)
-                // 프레임 닫고 null 처리 (중복 분석 방지)
-                imageProxy.close()
-                latestImageProxy = null
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
 
-                val input = preprocess(bitmap)
-                val output = Array(1) { FloatArray(3) }
-                interpreter.run(input, output)
+                val oneTimeAnalyzer = ImageAnalysis.Builder()
+                    .setTargetResolution(Size(imageSize, imageSize))
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
 
-                val maxProb = output[0].maxOrNull() ?: 0f
-                val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
+                oneTimeAnalyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+                    try {
+                        val bitmap = imageProxyToBitmap(imageProxy)
+                        imageProxy.close()
 
-                if (maxProb > 0.6f) {
-                    val resultText = classes[maxIdx]
+                        val input = preprocess(bitmap)
+                        val output = Array(1) { FloatArray(3) }
+                        interpreter.run(input, output)
 
-                    val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-                    val request = AlarmLogRequest(
-                        userId = userId,
-                        alarmTime = nowIso,
-                        postureType = maxIdx + 1
-                    )
-                    RetrofitClient.apiService().postAlarmLog(request)
-                        .enqueue(object : retrofit2.Callback<Void> {
-                            override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {}
-                            override fun onFailure(call: Call<Void>, t: Throwable) {
-                                Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
+                        val maxProb = output[0].maxOrNull() ?: 0f
+                        val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
+
+                        if (maxProb > 0.6f && maxIdx in classes.indices) {
+                            val resultText = classes[maxIdx]
+
+                            val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                            val request = AlarmLogRequest(
+                                userId = userId,
+                                alarmTime = nowIso,
+                                postureType = maxIdx + 1
+                            )
+
+                            RetrofitClient.apiService().postAlarmLog(request)
+                                .enqueue(object : retrofit2.Callback<Void> {
+                                    override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {}
+                                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                                        Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
+                                    }
+                                })
+
+                            requireActivity().runOnUiThread {
+                                showResultBubble(resultText)
                             }
-                        })
+                        }
 
-                    showResultBubble(resultText)
-                } else {
-                    Log.d("Posee", "불확실한 결과이므로 알림 생략: ${output[0].joinToString()}")
-                }
-            } ?: run {
-                Toast.makeText(requireContext(), "카메라 프레임을 가져오는 중입니다.", Toast.LENGTH_SHORT).show()
-            }
+                        requireActivity().runOnUiThread {
+                            cameraProvider.unbind(oneTimeAnalyzer)
+                            cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, defaultAnalyzer)
+                        }
+
+                    } catch (e: Exception) {
+                        imageProxy.close()
+                        Log.e("CameraActivity", "분석 중 오류: ${e.message}", e)
+                    }
+                })
+
+                // 기존 분석기만 해제
+                cameraProvider.unbind(defaultAnalyzer)
+
+                // 새로운 단일 분석기 바인딩
+                cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, oneTimeAnalyzer)
+
+            }, ContextCompat.getMainExecutor(requireContext()))
         }
+    }
+
+    private fun setGuideTextStyle() {
+        val text = "버튼을 누르어\n올바른 자세인지 아니지를\n확인할 수 있어요"
+        val spannable = SpannableString(text)
+        val purple = ContextCompat.getColor(requireContext(), R.color.purple_500)
+        spannable.setSpan(ForegroundColorSpan(purple), 0, 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(purple), 7, 17, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        binding.guideText.text = spannable
     }
 
     private fun startCamera() {
@@ -150,22 +173,21 @@ class CameraActivity : Fragment() {
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder().build().also {
+            preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
             }
 
-            val analyzer = ImageAnalysis.Builder()
+            defaultAnalyzer = ImageAnalysis.Builder()
                 .setTargetResolution(Size(imageSize, imageSize))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-            analyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
-                latestImageProxy?.close()
-                latestImageProxy = imageProxy
-            })
+                .build().apply {
+                    setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+                        imageProxy.close() // 기본 분석기는 프레임을 소비만 함
+                    })
+                }
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            cameraProvider.bindToLifecycle(this, cameraSelector, preview, analyzer)
+            cameraProvider.bindToLifecycle(viewLifecycleOwner, cameraSelector, preview, defaultAnalyzer)
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
@@ -192,7 +214,7 @@ class CameraActivity : Fragment() {
 
         val matrix = Matrix().apply {
             postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
-            postScale(-1f, 1f) // 전면 카메라 좌우 반전
+            postScale(-1f, 1f)
         }
 
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
@@ -226,7 +248,12 @@ class CameraActivity : Fragment() {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
+    private var isBubbleVisible = false
     private fun showResultBubble(result: String) {
+
+        if (isBubbleVisible) return // 이미 떠있으면 무시
+        isBubbleVisible = true
+
         val message = when (result) {
             "proper posture" -> "아주 좋은 자세예요!"
             "wrong posture" -> "자세를 조금만 고쳐볼까요!"
@@ -246,7 +273,12 @@ class CameraActivity : Fragment() {
         appNameText.text = "Posee"
         timeText.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
 
+
         closeBtn.setOnClickListener { dialog.dismiss() }
+
+        dialog.setOnDismissListener {
+            isBubbleVisible = false // 모든 방식의 닫기 감지
+        }
 
         dialog.setContentView(view)
         dialog.window?.let { window ->
