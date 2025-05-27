@@ -93,6 +93,7 @@ class CalendarActivity : Fragment() {
                         val group4 = mutableListOf<CalendarDay>()
 
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                        //Log.e("formatter: ", "$formatter")
                             for ((dateStr, count) in countMap) {
                                 if (count < 5) continue  // 5회 미만은 무시
 

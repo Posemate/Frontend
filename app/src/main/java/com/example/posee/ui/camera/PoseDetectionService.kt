@@ -34,6 +34,9 @@ import com.example.posee.network.AlarmLogRequest
 import com.example.posee.network.RetrofitClient
 import retrofit2.Call
 import android.util.Log
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 
 class PoseDetectionService : Service() {
@@ -167,7 +170,9 @@ class PoseDetectionService : Service() {
                         }
                         startForegroundWithNotification(message)
 
-                        val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                        val nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        val alarmTime = nowKst.format(formatter)
                         val postureType = when (result) {
                             "wrong posture" -> 2
                             "too close"     -> 3
@@ -175,7 +180,7 @@ class PoseDetectionService : Service() {
                         }
                         RetrofitClient
                             .apiService()
-                            .postAlarmLog( AlarmLogRequest(userId, nowIso, postureType) )
+                            .postAlarmLog( AlarmLogRequest(userId, alarmTime, postureType) )
                             .enqueue(object : retrofit2.Callback<Void> {
                                 override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {
                                     // 성공 시 별도 처리 없음
