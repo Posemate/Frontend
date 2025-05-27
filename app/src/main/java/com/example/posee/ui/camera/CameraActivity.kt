@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.util.Size
 import android.view.*
 import android.widget.TextView
-import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
@@ -34,10 +33,8 @@ import com.example.posee.R
 import com.example.posee.network.AlarmLogRequest
 import com.example.posee.network.RetrofitClient
 import retrofit2.Call
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class CameraActivity : Fragment() {
@@ -53,6 +50,10 @@ class CameraActivity : Fragment() {
 
     private lateinit var preview: Preview
     private lateinit var defaultAnalyzer: ImageAnalysis
+    private lateinit var cameraProvider: ProcessCameraProvider
+
+    private var isProcessing = false
+    private var isBubbleVisible = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -97,70 +98,69 @@ class CameraActivity : Fragment() {
         }
 
         binding.btnAnalyze.setOnClickListener {
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
+            isProcessing = false
 
-                val oneTimeAnalyzer = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(imageSize, imageSize))
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
+            val oneTimeAnalyzer = ImageAnalysis.Builder()
+                .setTargetResolution(Size(imageSize, imageSize))
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
 
-                oneTimeAnalyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
-                    try {
-                        val bitmap = imageProxyToBitmap(imageProxy)
-                        imageProxy.close()
+            oneTimeAnalyzer.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+                if (isProcessing) {
+                    imageProxy.close()
+                    return@Analyzer
+                }
+                isProcessing = true
 
-                        val input = preprocess(bitmap)
-                        val output = Array(1) { FloatArray(3) }
-                        interpreter.run(input, output)
+                try {
+                    val bitmap = imageProxyToBitmap(imageProxy)
+                    val input = preprocess(bitmap)
+                    val output = Array(1) { FloatArray(3) }
+                    interpreter.run(input, output)
+                    imageProxy.close()
 
-                        val maxProb = output[0].maxOrNull() ?: 0f
-                        val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
+                    val maxProb = output[0].maxOrNull() ?: 0f
+                    val maxIdx = output[0].indices.maxByOrNull { output[0][it] } ?: -1
 
-                        if (maxProb > 0.6f && maxIdx in classes.indices) {
-                            val resultText = classes[maxIdx]
+                    if (maxProb > 0.6f && maxIdx in classes.indices) {
+                        val resultText = classes[maxIdx]
 
-                            val nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-                            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-                            val alarmTime = nowKst.format(formatter)
-                            val request = AlarmLogRequest(
-                                userId = userId,
-                                alarmTime = alarmTime,
-                                postureType = maxIdx + 1
-                            )
+                        val nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        val alarmTime = nowKst.format(formatter)
+                        val request = AlarmLogRequest(userId, alarmTime, maxIdx + 1)
 
-                            RetrofitClient.apiService().postAlarmLog(request)
-                                .enqueue(object : retrofit2.Callback<Void> {
-                                    override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {}
-                                    override fun onFailure(call: Call<Void>, t: Throwable) {
-                                        Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
-                                    }
-                                })
-
-                            requireActivity().runOnUiThread {
-                                showResultBubble(resultText)
-                            }
-                        }
+                        RetrofitClient.apiService().postAlarmLog(request)
+                            .enqueue(object : retrofit2.Callback<Void> {
+                                override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {}
+                                override fun onFailure(call: Call<Void>, t: Throwable) {
+                                    Log.e("CameraActivity", "AlarmLog POST failed: ${t.message}")
+                                }
+                            })
 
                         requireActivity().runOnUiThread {
-                            cameraProvider.unbind(oneTimeAnalyzer)
-                            cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, defaultAnalyzer)
+                            showResultBubble(resultText)
                         }
-
-                    } catch (e: Exception) {
-                        imageProxy.close()
-                        Log.e("CameraActivity", "분석 중 오류: ${e.message}", e)
                     }
-                })
 
-                // 기존 분석기만 해제
-                cameraProvider.unbind(defaultAnalyzer)
+                    requireActivity().runOnUiThread {
+                        cameraProvider.unbind(oneTimeAnalyzer)
+                        cameraProvider.bindToLifecycle(
+                            viewLifecycleOwner,
+                            CameraSelector.DEFAULT_FRONT_CAMERA,
+                            preview,
+                            defaultAnalyzer
+                        )
+                    }
 
-                // 새로운 단일 분석기 바인딩
-                cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, oneTimeAnalyzer)
+                } catch (e: Exception) {
+                    imageProxy.close()
+                    Log.e("CameraActivity", "분석 중 오류: ${e.message}", e)
+                }
+            })
 
-            }, ContextCompat.getMainExecutor(requireContext()))
+            cameraProvider.unbind(defaultAnalyzer)
+            cameraProvider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, oneTimeAnalyzer)
         }
     }
 
@@ -176,7 +176,7 @@ class CameraActivity : Fragment() {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
 
             preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
@@ -187,7 +187,7 @@ class CameraActivity : Fragment() {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build().apply {
                     setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
-                        imageProxy.close() // 기본 분석기는 프레임을 소비만 함
+                        imageProxy.close()
                     })
                 }
 
@@ -253,10 +253,8 @@ class CameraActivity : Fragment() {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
-    private var isBubbleVisible = false
     private fun showResultBubble(result: String) {
-
-        if (isBubbleVisible) return // 이미 떠있으면 무시
+        if (isBubbleVisible) return
         isBubbleVisible = true
 
         val message = when (result) {
@@ -278,11 +276,10 @@ class CameraActivity : Fragment() {
         appNameText.text = "Posee"
         timeText.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
 
-
         closeBtn.setOnClickListener { dialog.dismiss() }
 
         dialog.setOnDismissListener {
-            isBubbleVisible = false // 모든 방식의 닫기 감지
+            isBubbleVisible = false
         }
 
         dialog.setContentView(view)
