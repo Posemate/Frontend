@@ -35,6 +35,9 @@ import com.example.posee.network.AlarmLogRequest
 import com.example.posee.network.RetrofitClient
 import retrofit2.Call
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class CameraActivity : Fragment() {
@@ -118,10 +121,12 @@ class CameraActivity : Fragment() {
                         if (maxProb > 0.6f && maxIdx in classes.indices) {
                             val resultText = classes[maxIdx]
 
-                            val nowIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                            val nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                            val alarmTime = nowKst.format(formatter)
                             val request = AlarmLogRequest(
                                 userId = userId,
-                                alarmTime = nowIso,
+                                alarmTime = alarmTime,
                                 postureType = maxIdx + 1
                             )
 
