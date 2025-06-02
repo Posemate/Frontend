@@ -38,6 +38,14 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import android.app.ActivityManager
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.view.View
+import android.view.WindowManager
+import android.view.LayoutInflater
+import android.view.Gravity
+import android.widget.Toast
 
 
 class PoseDetectionService : Service() {
@@ -53,10 +61,42 @@ class PoseDetectionService : Service() {
     private var cameraProvider: ProcessCameraProvider? = null
     private var analyzer: ImageAnalysis? = null
 
+    // 다른 앱 위에 창 띄우기
+    private lateinit var windowManager: WindowManager
+    private lateinit var floatingView: View
+    private lateinit var overlayParams: WindowManager.LayoutParams
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+
+        // 다른 앱 위에 창 띄우기
+        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+        // 2-2. floatingView Inflate (layout/floating_overlay.xml 을 미리 만들어두세요)
+        floatingView = LayoutInflater.from(this).inflate(R.layout.floating_overlay, null)
+
+        // 2-3. overlayParams 설정
+        overlayParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            PixelFormat.TRANSLUCENT
+        )
+
+        // 초기 위치(원하는 값으로 조정)
+        overlayParams.gravity = Gravity.TOP or Gravity.START
+        overlayParams.x = 100
+        overlayParams.y = 200
+
 
         val prefs = getSharedPreferences("user_prefs", MODE_PRIVATE)
         userId = prefs.getString("logged_in_userId", null)
@@ -183,6 +223,29 @@ class PoseDetectionService : Service() {
                             else -> return@Analyzer
                         }
                         startForegroundWithNotification(message)
+                        // 메인 스레드로 전환하여 오버레이 추가/제거 작업 수행
+                        mainHandler.post {
+                            // 1) 오버레이 권한 확인
+                            if (Settings.canDrawOverlays(this)) {
+                                // 2) 아직 뷰가 붙어 있지 않으면 addView 실행
+                                if (floatingView.parent == null) {
+                                    windowManager.addView(floatingView, overlayParams)
+                                }
+                                // 3) 2초 뒤에 메인 스레드에서 removeView 실행
+                                mainHandler.postDelayed({
+                                    if (floatingView.parent != null) {
+                                        windowManager.removeView(floatingView)
+                                    }
+                                }, 2000L)
+                            } else {
+                                // 권한이 없으면 사용자에게 알림(Toast 등) – 역시 메인 스레드에서
+                                Toast.makeText(
+                                    this,
+                                    "오버레이 권한이 필요합니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
 
                         val nowKst = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
