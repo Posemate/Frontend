@@ -37,6 +37,7 @@ import android.util.Log
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import android.app.ActivityManager
 
 
 class PoseDetectionService : Service() {
@@ -95,6 +96,19 @@ class PoseDetectionService : Service() {
         } else {
             false
         }
+    }
+
+    private fun isAppInForeground(): Boolean {
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val appProcesses = activityManager.runningAppProcesses ?: return false
+        val packageName = packageName
+        for (appProcess in appProcesses) {
+            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                && appProcess.processName == packageName) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun startForegroundWithNotification(message: String) {
@@ -162,7 +176,7 @@ class PoseDetectionService : Service() {
                 val eyeOn = prefs.getBoolean("eye_switch_state", false)
 
                 if ((result == "wrong posture" && neckOn) || (result == "too close" && eyeOn)) {
-                    if (shouldNotify()) {
+                    if (shouldNotify() && !isAppInForeground()) {  // 앱이 포그라운드 아니면 알림 띄움
                         val message = when (result) {
                             "wrong posture" -> "자세가 좋지 않아요!"
                             "too close" -> "너무 가까워요!"
