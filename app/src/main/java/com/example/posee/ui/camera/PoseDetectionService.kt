@@ -214,6 +214,7 @@ class PoseDetectionService : Service() {
                 val prefs = getSharedPreferences("drawer_prefs", Context.MODE_PRIVATE)
                 val neckOn = prefs.getBoolean("neck_switch_state", false)
                 val eyeOn = prefs.getBoolean("eye_switch_state", false)
+                val overlay = prefs.getBoolean("overlay_switch_state", false)
 
                 if ((result == "wrong posture" && neckOn) || (result == "too close" && eyeOn)) {
                     if (shouldNotify() && !isAppInForeground()) {  // 앱이 포그라운드 아니면 알림 띄움
@@ -223,27 +224,29 @@ class PoseDetectionService : Service() {
                             else -> return@Analyzer
                         }
                         startForegroundWithNotification(message)
-                        // 메인 스레드로 전환하여 오버레이 추가/제거 작업 수행
-                        mainHandler.post {
-                            // 1) 오버레이 권한 확인
-                            if (Settings.canDrawOverlays(this)) {
-                                // 2) 아직 뷰가 붙어 있지 않으면 addView 실행
-                                if (floatingView.parent == null) {
-                                    windowManager.addView(floatingView, overlayParams)
-                                }
-                                // 3) 2초 뒤에 메인 스레드에서 removeView 실행
-                                mainHandler.postDelayed({
-                                    if (floatingView.parent != null) {
-                                        windowManager.removeView(floatingView)
+                        if (overlay) {
+                            // 메인 스레드로 전환하여 오버레이 추가/제거 작업 수행
+                            mainHandler.post {
+                                // 1) 오버레이 권한 확인
+                                if (Settings.canDrawOverlays(this)) {
+                                    // 2) 아직 뷰가 붙어 있지 않으면 addView 실행
+                                    if (floatingView.parent == null) {
+                                        windowManager.addView(floatingView, overlayParams)
                                     }
-                                }, 2000L)
-                            } else {
-                                // 권한이 없으면 사용자에게 알림(Toast 등) – 역시 메인 스레드에서
-                                Toast.makeText(
-                                    this,
-                                    "오버레이 권한이 필요합니다.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                    // 3) 2초 뒤에 메인 스레드에서 removeView 실행
+                                    mainHandler.postDelayed({
+                                        if (floatingView.parent != null) {
+                                            windowManager.removeView(floatingView)
+                                        }
+                                    }, 2000L)
+                                } else {
+                                    // 권한이 없으면 사용자에게 알림(Toast 등) – 역시 메인 스레드에서
+                                    Toast.makeText(
+                                        this,
+                                        "오버레이 권한이 필요합니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         }
 
