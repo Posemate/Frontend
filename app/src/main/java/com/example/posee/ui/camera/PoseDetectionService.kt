@@ -113,7 +113,11 @@ class PoseDetectionService : Service() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
         ) {
-            startCameraAnalysis()
+            if (analyzer == null) {
+                startCameraAnalysis()
+            } else {
+                Log.d("PoseDetectionService", "카메라 분석 이미 시작됨, 재시작 생략")
+            }
         } else {
             stopSelf() // 권한 없으면 서비스 중단
         }
@@ -193,11 +197,24 @@ class PoseDetectionService : Service() {
     private fun startCameraAnalysis() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
-            analyzer = ImageAnalysis.Builder()
+            val provider = cameraProviderFuture.get()
+            cameraProvider = provider
+
+            // 기존에 쓰던 analyzer가 있으면 먼저 해제
+            analyzer?.let {
+                try {
+                    provider.unbind(it)
+                } catch (e: Exception) {
+                    Log.w("PoseDetectionService", "기존 analyzer unbind 중 예외: ${e.message}")
+                }
+            }
+
+            val analysis = ImageAnalysis.Builder()
                 .setTargetResolution(Size(imageSize, imageSize))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
+
+            analyzer = analysis
 
             analyzer?.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
                 val bitmap = imageProxyToBitmap(imageProxy)
@@ -276,7 +293,7 @@ class PoseDetectionService : Service() {
             })
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, analyzer)
+            provider?.bindToLifecycle(lifecycleOwner, cameraSelector, analyzer)
         }, ContextCompat.getMainExecutor(this))
     }
 

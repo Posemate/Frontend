@@ -139,7 +139,8 @@ class CameraActivity : Fragment() {
                             })
 
                         requireActivity().runOnUiThread {
-                            showResultBubble(resultText)
+                            //showResultBubble(resultText)      // 지금 있는 말풍선
+                            showPostureNotification(resultText) // 시스템 알림 추가
                         }
                     }
 
@@ -293,6 +294,40 @@ class CameraActivity : Fragment() {
         }
         dialog.show()
     }
+
+    private fun showPostureNotification(result: String) {
+        val message = when (result) {
+            "proper posture" -> "아주 좋은 자세예요!"
+            "wrong posture" -> "자세를 조금만 고쳐볼까요!"
+            "too close"     -> "너무 가까워요!"
+            else            -> "결과를 알 수 없습니다."
+        }
+
+        val channelId = "posee_posture_alert"
+
+        val manager = requireContext()
+            .getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Android 8.0 이상은 채널 필요
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = android.app.NotificationChannel(
+                channelId,
+                "Posee 자세 알림",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            )
+            manager.createNotificationChannel(channel)
+        }
+
+        val notification = androidx.core.app.NotificationCompat.Builder(requireContext(), channelId)
+            .setSmallIcon(R.drawable.ic_notification) // 앱에 있는 아이콘으로 교체
+            .setContentTitle("Posee")
+            .setContentText(message)
+            .setAutoCancel(true)
+            .build()
+
+        manager.notify(1002, notification)
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

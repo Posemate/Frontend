@@ -6,8 +6,8 @@
 
     <ImageView
         android:id="@+id/overlayImage"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="fitXY"
-        android:src="@drawable/overlay" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/overlay_posture"
+        android:layout_marginHorizontal="20dp"/>
 </FrameLayout>
