@@ -8,6 +8,6 @@
         android:id="@+id/overlayImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/overlay"
+        android:src="@drawable/overlay_posture"
         android:layout_marginHorizontal="20dp"/>
 </FrameLayout>
