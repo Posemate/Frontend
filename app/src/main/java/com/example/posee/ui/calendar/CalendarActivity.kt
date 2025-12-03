@@ -94,21 +94,21 @@ class CalendarActivity : Fragment() {
 
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                         //Log.e("formatter: ", "$formatter")
-                            for ((dateStr, count) in countMap) {
-                                if (count < 5) continue  // 5회 미만은 무시
+                        for ((dateStr, count) in countMap) {
+                            if (count < 5) continue  // 5회 미만은 무시
 
-                                val localDate = LocalDate.parse(dateStr, formatter)
-                                val calendarDay = CalendarDay.from(localDate.year, localDate.monthValue, localDate.dayOfMonth)
+                            val localDate = LocalDate.parse(dateStr, formatter)
+                            val calendarDay = CalendarDay.from(localDate.year, localDate.monthValue, localDate.dayOfMonth)
 
-                                Log.d("디버깅", "dateStr=$dateStr → localDate=$localDate → calendarDay=${calendarDay.year}-${calendarDay.month}-${calendarDay.day}, count=$count")
+                            Log.d("디버깅", "dateStr=$dateStr → localDate=$localDate → calendarDay=${calendarDay.year}-${calendarDay.month}-${calendarDay.day}, count=$count")
 
-                                when (count) {
-                                    in 5..25 -> group1.add(calendarDay)
-                                    in 26..45 -> group2.add(calendarDay)
-                                    in 46..66 -> group3.add(calendarDay)
-                                    else -> group4.add(calendarDay)
-                                }
+                            when (count) {
+                                in 5..25 -> group1.add(calendarDay)
+                                in 26..45 -> group2.add(calendarDay)
+                                in 46..66 -> group3.add(calendarDay)
+                                else -> group4.add(calendarDay)
                             }
+                        }
 
 
                         calendarView.addDecorator(CalendarDecorator(requireContext(), eventColor1, group1))

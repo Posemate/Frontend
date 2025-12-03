@@ -318,10 +318,21 @@ class CameraActivity : Fragment() {
             manager.createNotificationChannel(channel)
         }
 
+       // 알림 아이콘 로드
+        val largeIcon = BitmapFactory.decodeResource(
+            resources,
+            R.drawable.logo_popup
+        )
+
         val notification = androidx.core.app.NotificationCompat.Builder(requireContext(), channelId)
-            .setSmallIcon(R.drawable.ic_notification) // 앱에 있는 아이콘으로 교체
+            .setSmallIcon(R.drawable.logo_popup) // 로고 알림 아이콘
+            .setLargeIcon(largeIcon) // 컬러 로고 표시
             .setContentTitle("Posee")
             .setContentText(message)
+            .setStyle(
+                androidx.core.app.NotificationCompat.BigPictureStyle()
+                    .bigPicture(largeIcon) // 이미지 크게 표시
+            )
             .setAutoCancel(true)
             .build()
 
