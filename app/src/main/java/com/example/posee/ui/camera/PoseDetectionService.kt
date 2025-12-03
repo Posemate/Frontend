@@ -28,7 +28,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.util.concurrent.Executors
-import java.time.Instant
 import java.time.format.DateTimeFormatter
 import com.example.posee.network.AlarmLogRequest
 import com.example.posee.network.RetrofitClient
@@ -36,7 +35,6 @@ import retrofit2.Call
 import android.util.Log
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import android.app.ActivityManager
 import android.os.Handler
 import android.os.Looper
@@ -46,6 +44,7 @@ import android.view.WindowManager
 import android.view.LayoutInflater
 import android.view.Gravity
 import android.widget.Toast
+import android.widget.ImageView
 
 
 class PoseDetectionService : Service() {
@@ -68,6 +67,8 @@ class PoseDetectionService : Service() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    private lateinit var overlayImageView: ImageView
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -78,6 +79,8 @@ class PoseDetectionService : Service() {
 
         // 2-2. floatingView Inflate (layout/floating_overlay.xml 을 미리 만들어두세요)
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_overlay, null)
+
+        overlayImageView = floatingView.findViewById(R.id.overlay_icon)
 
         // 2-3. overlayParams 설정
         overlayParams = WindowManager.LayoutParams(
@@ -242,22 +245,29 @@ class PoseDetectionService : Service() {
                         }
                         startForegroundWithNotification(message)
                         if (overlay) {
-                            // 메인 스레드로 전환하여 오버레이 추가/제거 작업 수행
                             mainHandler.post {
-                                // 1) 오버레이 권한 확인
+
+                                // 1. 결과에 따라 사용할 이미지 리소스 선택
+                                val overlayResId = when (result) {
+                                    "wrong posture" -> R.drawable.overlay_posture // 자세 불량
+                                    "too close"     -> R.drawable.overlay         // 너무 가까움
+                                    else            -> R.drawable.overlay
+                                }
+
+                                // 2. ImageView 에 적용
+                                overlayImageView.setImageResource(overlayResId)
+
+                                // 3. 오버레이 권한 체크 후 add/remove
                                 if (Settings.canDrawOverlays(this)) {
-                                    // 2) 아직 뷰가 붙어 있지 않으면 addView 실행
                                     if (floatingView.parent == null) {
                                         windowManager.addView(floatingView, overlayParams)
                                     }
-                                    // 3) 2초 뒤에 메인 스레드에서 removeView 실행
                                     mainHandler.postDelayed({
                                         if (floatingView.parent != null) {
                                             windowManager.removeView(floatingView)
                                         }
                                     }, 2000L)
                                 } else {
-                                    // 권한이 없으면 사용자에게 알림(Toast 등) – 역시 메인 스레드에서
                                     Toast.makeText(
                                         this,
                                         "오버레이 권한이 필요합니다.",
